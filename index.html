@@ -12,6 +12,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GymLog">
 <meta name="format-detection" content="telephone=no">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236c5ce7'%3E%3Cg transform='rotate(-45 12 12)'%3E%3Crect x='1.5' y='8.5' width='2' height='7' rx='0.75'/%3E%3Crect x='3.5' y='6' width='2.5' height='12' rx='1'/%3E%3Crect x='6' y='7.5' width='1.5' height='9' rx='0.75'/%3E%3Crect x='7.5' y='11' width='9' height='2' rx='0.5'/%3E%3Crect x='16.5' y='7.5' width='1.5' height='9' rx='0.75'/%3E%3Crect x='18' y='6' width='2.5' height='12' rx='1'/%3E%3Crect x='20.5' y='8.5' width='2' height='7' rx='0.75'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='128' fill='%2317181d'/%3E%3Cg transform='translate(256 256) rotate(-45) scale(18) translate(-12 -12)' fill='%236c5ce7'%3E%3Crect x='1.5' y='8.5' width='2' height='7' rx='0.75'/%3E%3Crect x='3.5' y='6' width='2.5' height='12' rx='1'/%3E%3Crect x='6' y='7.5' width='1.5' height='9' rx='0.75'/%3E%3Crect x='7.5' y='11' width='9' height='2' rx='0.5'/%3E%3Crect x='16.5' y='7.5' width='1.5' height='9' rx='0.75'/%3E%3Crect x='18' y='6' width='2.5' height='12' rx='1'/%3E%3Crect x='20.5' y='8.5' width='2' height='7' rx='0.75'/%3E%3C/g%3E%3C/svg%3E">
 <link id="manifestLink" rel="manifest">
 
 <!-- Chart.js desde CDN (respaldo offline: si no carga, se usa el renderer propio) -->
@@ -344,6 +346,15 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.6;
 .ed-prep-tipo{flex:0 0 auto;background:var(--card);border:none;border-radius:9px;color:var(--text);font-size:12px;font-weight:700;padding:10px 8px;-webkit-appearance:none;appearance:none;}
 .ed-prep-row .ed-input{background:var(--card);font-size:13px;}
 .add-line.sm{padding:9px;font-size:12.5px;background:var(--card);margin-bottom:6px;}
+
+/* Registros independientes en el detalle del día */
+.reg-card{background:var(--card);border-radius:16px;padding:14px;margin-bottom:12px;}
+.reg-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px;}
+.reg-title{font-size:14px;font-weight:800;color:var(--text);margin:0;letter-spacing:-0.1px;}
+.reg-hora{font-size:11.5px;color:var(--text-3);font-weight:700;white-space:nowrap;}
+.reg-card .detail-ex{background:var(--card-2);}
+.reg-actions{display:flex;gap:8px;margin-top:4px;}
+.btn.sm{padding:10px;font-size:13.5px;}
 </style>
 </head>
 <body>
@@ -407,7 +418,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.6;
   </div>
 
   <nav class="tabbar" id="tabbar">
-    <button class="tab active" data-tab="train"><span class="ico">🏋️</span>Entrenar</button>
+    <button class="tab active" data-tab="train"><span class="ico"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" style="transform: rotate(-45deg); display: inline-block; vertical-align: -0.15em;"><rect x="1.5" y="8.5" width="2" height="7" rx="0.75"/><rect x="3.5" y="6" width="2.5" height="12" rx="1"/><rect x="6" y="7.5" width="1.5" height="9" rx="0.75"/><rect x="7.5" y="11" width="9" height="2" rx="0.5"/><rect x="16.5" y="7.5" width="1.5" height="9" rx="0.75"/><rect x="18" y="6" width="2.5" height="12" rx="1"/><rect x="20.5" y="8.5" width="2" height="7" rx="0.75"/></svg></span>Entrenar</button>
     <button class="tab" data-tab="progress"><span class="ico">📈</span>Progreso</button>
     <button class="tab" data-tab="calendar"><span class="ico">📅</span>Calendario</button>
     <button class="tab" data-tab="notes"><span class="ico">💬</span>Notas</button>
@@ -959,6 +970,8 @@ document.addEventListener("click",(e)=>{ if(e.target.id==="saveBtn" && !e.target
 function guardarSesion(){
   const sesion=DB.rutina[sesionEnCurso];
   const fecha=borradorActual.fecha || hoyISO();
+  const guardadoId = Date.now()+"_"+Math.random().toString(36).slice(2,8);
+  const guardadoHora = new Date().toISOString();
   borradorActual.ejercicios.forEach(b=>{
     const seriesDet=b.series.map(s=>({ peso:redondear(parseFloat(s.peso))||0, reps:parseInt(s.reps)||0 }));
     const totalReps=seriesDet.reduce((a,s)=>a+(s.reps||0),0);
@@ -966,7 +979,7 @@ function guardarSesion(){
     DB.historial.push({
       fecha, sesion:sesion.nombre, ejercicio:b.nombre,
       peso:pesoRep, unidad:b.unidad, repeticiones:totalReps, series:seriesDet,
-      comentario:(b.comentario||"").trim()
+      comentario:(b.comentario||"").trim(), guardadoId, guardadoHora
     });
   });
   guardarDB(); limpiarBorrador(); cambiosSinGuardar=false;
@@ -1237,23 +1250,134 @@ function renderAnio(){
   $$('#calBody .my-cell[data-day]').forEach(c=> c.addEventListener("click",()=>abrirDetalleDia(c.dataset.day)));
 }
 
+/** Clave que agrupa las entradas de historial pertenecientes a un mismo "guardado" de sesión.
+ *  Los registros nuevos tienen guardadoId propio; los antiguos (sin id) se agrupan por fecha+sesión. */
+function claveRegistro(r){ return r.guardadoId ? ("id:"+r.guardadoId) : ("leg:"+r.fecha+"|"+r.sesion); }
+function entradasDeRegistro(clave){ return DB.historial.filter(r=>claveRegistro(r)===clave); }
+function formatearHora(iso){
+  if(!iso) return "";
+  const d=new Date(iso); if(isNaN(d)) return "";
+  return d.toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit"});
+}
+
 function abrirDetalleDia(iso){
   const regs=DB.historial.filter(r=>r.fecha===iso); if(!regs.length) return;
-  const porSesion={}; regs.forEach(r=>{ (porSesion[r.sesion]=porSesion[r.sesion]||[]).push(r); });
+  const grupos={}; const orden=[];
+  regs.forEach(r=>{ const k=claveRegistro(r); if(!grupos[k]){ grupos[k]=[]; orden.push(k); } grupos[k].push(r); });
   let cuerpo="";
-  Object.keys(porSesion).forEach(sn=>{
-    cuerpo+=`<h4>${escapar(sn)}</h4>`;
-    porSesion[sn].forEach(r=>{
+  orden.forEach(k=>{
+    const items=grupos[k]; const primero=items[0];
+    const hora=formatearHora(primero.guardadoHora);
+    let filas="";
+    items.forEach(r=>{
       const brk = Array.isArray(r.series)&&r.series.length ? r.series.map(s=>s.reps).join(" · ") : r.repeticiones;
       const cmt = r.comentario && r.comentario.trim() ? `<div class="de-cmt">💬 ${escapar(r.comentario)}</div>` : "";
-      cuerpo+=`<div class="detail-ex">
+      filas+=`<div class="detail-ex">
         <div class="de-name">${escapar(r.ejercicio)}<div class="de-reps">Series: ${brk} — total ${r.repeticiones} reps</div>${cmt}</div>
         <div class="de-val">${fmtPeso(r.peso)} ${r.unidad}</div></div>`;
     });
+    cuerpo+=`<div class="reg-card">
+      <div class="reg-head"><h4 class="reg-title">${escapar(primero.sesion)}</h4>${hora?`<span class="reg-hora">${hora}</span>`:""}</div>
+      ${filas}
+      <div class="reg-actions">
+        <button class="btn grey sm" onclick="editarRegistro('${k}')">✏️ Editar</button>
+        <button class="btn red sm" onclick="eliminarRegistro('${k}','${iso}')">🗑 Eliminar</button>
+      </div>
+    </div>`;
   });
   abrirSheet(`<div class="grabber"></div><div class="day-detail">
-      <h2>${formatearFecha(iso)}</h2><p class="sub">${regs.length} ejercicios registrados</p>${cuerpo}
+      <h2>${formatearFecha(iso)}</h2><p class="sub">${orden.length} ${orden.length===1?"registro guardado":"registros guardados"} · ${regs.length} ejercicios</p>${cuerpo}
       <button class="btn grey" style="margin-top:14px" onclick="cerrarOverlay()">Cerrar</button></div>`);
+}
+
+/** Elimina únicamente el registro (grupo) indicado, sin afectar otros del mismo día. */
+function eliminarRegistro(clave, iso){
+  abrirModal(`<h3>¿Eliminar este registro?</h3><p>¿Estás seguro de querer eliminar este registro de entrenamiento? Esta acción no se puede deshacer.</p>
+    <div class="modal-actions"><button class="btn grey" onclick="cerrarOverlay()">Cancelar</button><button class="btn red" id="okDelReg">Eliminar</button></div>`);
+  $("#okDelReg").onclick=()=>{
+    DB.historial = DB.historial.filter(r=>claveRegistro(r)!==clave);
+    guardarDB(); cerrarOverlay();
+    toast("Registro eliminado");
+    if(DB.historial.some(r=>r.fecha===iso)) abrirDetalleDia(iso);
+    renderCalendario();
+  };
+}
+
+/** Abre un editor para un registro (grupo) específico: pesos, reps, comentario y fecha. */
+let editorRegistroTemp=null;
+function editarRegistro(clave){
+  const items=entradasDeRegistro(clave);
+  if(!items.length){ toast("Este registro ya no existe","⚠️"); return; }
+  editorRegistroTemp={
+    clave, fecha:items[0].fecha, sesion:items[0].sesion,
+    ejercicios: items.map(r=>({
+      ejercicio:r.ejercicio, unidad:r.unidad, comentario:r.comentario||"",
+      series: (r.series&&r.series.length?r.series:[{peso:r.peso,reps:r.repeticiones}]).map(s=>({peso:String(s.peso??""), reps:String(s.reps??"")}))
+    }))
+  };
+  renderEditorRegistro();
+}
+function renderEditorRegistro(){
+  const er=editorRegistroTemp;
+  let html=`<div class="grabber"></div><h2>Editar registro</h2><p class="sub">${escapar(er.sesion)}</p>
+    <div class="date-row" style="margin-bottom:14px">
+      <label for="regFecha">📅 Fecha</label>
+      <input type="date" id="regFecha" value="${er.fecha}">
+    </div>`;
+  er.ejercicios.forEach((ej,ei)=>{
+    let filas="";
+    ej.series.forEach((s,si)=>{
+      filas+=`<div class="serie-row">
+        <div class="serie-lbl">Serie ${si+1}</div>
+        <div class="serie-field"><input class="num-in" type="text" inputmode="decimal" data-reg-peso="${ei}_${si}" value="${s.peso}" placeholder="—"><span class="uf">${ej.unidad}</span></div>
+        <div class="serie-field"><input class="num-in" type="text" inputmode="numeric" data-reg-reps="${ei}_${si}" value="${s.reps}" placeholder="0"><span class="uf">reps</span></div>
+      </div>`;
+    });
+    html+=`<div class="ex-card">
+      <div class="ex-head"><div class="ex-head-txt"><div class="ex-name">${escapar(ej.ejercicio)}</div></div></div>
+      <div class="series-list">${filas}</div>
+      <div class="cmt-wrap"><textarea class="cmt-area" data-reg-cmt="${ei}" placeholder="Notas del ejercicio">${escapar(ej.comentario)}</textarea></div>
+    </div>`;
+  });
+  html+=`<div class="modal-actions" style="margin-top:6px">
+    <button class="btn grey" onclick="cerrarOverlay()">Cancelar</button>
+    <button class="btn green" onclick="confirmarGuardarRegistro()">Guardar cambios</button>
+  </div>`;
+  abrirSheet(html);
+  $("#regFecha").oninput=(e)=>{ editorRegistroTemp.fecha=e.target.value; };
+  $$("#overlay [data-reg-peso]").forEach(inp=> inp.oninput=()=>{
+    const val=sanNum(inp.value,true); if(val!==inp.value) inp.value=val;
+    const [ei,si]=inp.dataset.regPeso.split("_").map(Number); editorRegistroTemp.ejercicios[ei].series[si].peso=val;
+  });
+  $$("#overlay [data-reg-reps]").forEach(inp=> inp.oninput=()=>{
+    const val=sanNum(inp.value,false); if(val!==inp.value) inp.value=val;
+    const [ei,si]=inp.dataset.regReps.split("_").map(Number); editorRegistroTemp.ejercicios[ei].series[si].reps=val;
+  });
+  $$("#overlay [data-reg-cmt]").forEach(ta=> ta.oninput=()=>{
+    editorRegistroTemp.ejercicios[+ta.dataset.regCmt].comentario=ta.value;
+  });
+}
+function confirmarGuardarRegistro(){
+  abrirModal(`<h3>Guardar cambios</h3><p>¿Estás seguro de querer editar y guardar los cambios de este registro?</p>
+    <div class="modal-actions"><button class="btn grey" id="cancelEditReg">Cancelar</button><button class="btn green" id="okEditReg">Aceptar</button></div>`);
+  $("#cancelEditReg").onclick=()=>{ renderEditorRegistro(); };  // vuelve a mostrar el editor, no pierde cambios
+  $("#okEditReg").onclick=()=>{
+    const er=editorRegistroTemp; const fecha=er.fecha||hoyISO();
+    // localizar índices originales para reemplazarlos preservando el resto del historial
+    const idxOriginales=[]; DB.historial.forEach((r,idx)=>{ if(claveRegistro(r)===er.clave) idxOriginales.push(idx); });
+    const guardadoId = (idxOriginales.length && DB.historial[idxOriginales[0]].guardadoId) || (Date.now()+"_"+Math.random().toString(36).slice(2,8));
+    const nuevos = er.ejercicios.map(ej=>{
+      const seriesDet=ej.series.map(s=>({ peso:redondear(parseFloat(s.peso))||0, reps:parseInt(s.reps)||0 }));
+      const totalReps=seriesDet.reduce((a,s)=>a+(s.reps||0),0);
+      const pesoRep=redondear(Math.max(...seriesDet.map(s=>s.peso||0)));
+      return { fecha, sesion:er.sesion, ejercicio:ej.ejercicio, peso:pesoRep, unidad:ej.unidad,
+        repeticiones:totalReps, series:seriesDet, comentario:(ej.comentario||"").trim(), guardadoId, guardadoHora:new Date().toISOString() };
+    });
+    DB.historial = DB.historial.filter((r,idx)=> idxOriginales.indexOf(idx)===-1).concat(nuevos);
+    guardarDB(); cerrarOverlay(); editorRegistroTemp=null;
+    toast("Registro actualizado");
+    renderCalendario();
+  };
 }
 
 /* -------------------------------------------------------------------------
@@ -1262,7 +1386,7 @@ function abrirDetalleDia(iso){
 const overlay=$("#overlay");
 function abrirSheet(html){ overlay.innerHTML=`<div class="sheet" onclick="event.stopPropagation()">${html}</div>`; overlay.className="overlay show"; }
 function abrirModal(html){ overlay.innerHTML=`<div class="modal-card" onclick="event.stopPropagation()">${html}</div>`; overlay.className="overlay modal-center show"; }
-function cerrarOverlay(){ overlay.classList.remove("show"); overlay.className="overlay"; setTimeout(()=>overlay.innerHTML="",250); }
+function cerrarOverlay(){ overlay.classList.remove("show"); overlay.className="overlay"; setTimeout(()=>{ if(!overlay.classList.contains("show")) overlay.innerHTML=""; },250); }
 overlay.addEventListener("click", cerrarOverlay); window.cerrarOverlay=cerrarOverlay;
 function confirmarSalida(onOk){
   abrirModal(`<h3>¿Salir sin guardar?</h3><p>Tienes datos de esta sesión sin guardar. Si sales ahora se perderán.</p>
@@ -1423,20 +1547,14 @@ function reconciliarBorrador(){
 
 Object.assign(window,{exportarDatos,importarDatos,restablecerRutina,eliminarTodo,abrirEditor,
   agregarSesionEditor,borrarSesionEditor,agregarEjercicioEditor,borrarEjercicioEditor,guardarEditor,cambiarSeries,
-  agregarPrepEditor,borrarPrepEditor});
+  agregarPrepEditor,borrarPrepEditor,editarRegistro,eliminarRegistro,confirmarGuardarRegistro});
 
 /* -------------------------------------------------------------------------
    13. PWA
    ------------------------------------------------------------------------- */
 function iconoSVG(){
 return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-    <defs>
-      <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#7c6cf0"/>
-        <stop offset="1" stop-color="#12d9a6"/>
-      </linearGradient>
-    </defs>
-    <rect width="512" height="512" rx="116" fill="url(#bg)"/>
+    <rect width="512" height="512" rx="116" fill="#6c5ce7"/>
     <g fill="#ffffff">
       <rect x="150" y="232" width="212" height="48" rx="24"/>
       <rect x="128" y="156" width="46" height="200" rx="23"/>
