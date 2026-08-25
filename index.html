@@ -452,12 +452,12 @@ const RUTINA_DEFAULT = [
       {tipo:"Prehab", texto:"Face Pulls en polea alta 2×15"}
     ],
     ejercicios:[
-    { nombre:"Press con mancuernas en banco plano", objetivo:"Pectoral", series:3, reps:"8-10", sup:false },
-    { nombre:"Remo en polea baja agarre neutro", objetivo:"Dorsales / Romboides", series:3, reps:"10-12", sup:true },
-    { nombre:"Press inclinado con mancuernas (15°-30°)", objetivo:"Pectoral", series:3, reps:"8-10", sup:false },
-    { nombre:"Jalón al pecho agarre neutro", objetivo:"Dorsales", series:3, reps:"10-12", sup:true },
-    { nombre:"Elevaciones laterales en polea baja", objetivo:"Deltoides lateral", series:4, reps:"12-15", sup:false },
-    { nombre:"Extensiones tríceps en polea alta con cuerda", objetivo:"Tríceps", series:3, reps:"10-12", sup:true }
+    { nombre:"Press con mancuernas en banco plano", objetivo:"Pectoral", series:3, reps:"8-10", sup:false, modo:"normal" },
+    { nombre:"Remo en polea baja agarre neutro", objetivo:"Dorsales / Romboides", series:3, reps:"10-12", sup:true, modo:"normal" },
+    { nombre:"Press inclinado con mancuernas (15°-30°)", objetivo:"Pectoral", series:3, reps:"8-10", sup:false, modo:"normal" },
+    { nombre:"Jalón al pecho agarre neutro", objetivo:"Dorsales", series:3, reps:"10-12", sup:true, modo:"normal" },
+    { nombre:"Elevaciones laterales en polea baja", objetivo:"Deltoides lateral", series:4, reps:"12-15", sup:false, modo:"normal" },
+    { nombre:"Extensiones tríceps en polea alta con cuerda", objetivo:"Tríceps", series:3, reps:"10-12", sup:true, modo:"normal" }
   ]},
   { nombre:"Sesión 2 · Pierna anterior",
     prep:[
@@ -465,12 +465,12 @@ const RUTINA_DEFAULT = [
       {tipo:"Prehab", texto:"Abductores en máquina 2×20"}
     ],
     ejercicios:[
-    { nombre:"Hack Squat en máquina", objetivo:"Cuádriceps / Glúteo", series:4, reps:"8-10", sup:false },
-    { nombre:"Hip Thrust", objetivo:"Glúteo", series:3, reps:"10-12", sup:false },
-    { nombre:"Extensión de cuádriceps", objetivo:"Cuádriceps", series:3, reps:"12-15", sup:false },
-    { nombre:"Leg Curl tumbado", objetivo:"Isquiotibiales", series:3, reps:"10-12", sup:true },
-    { nombre:"Elevación de talones de pie", objetivo:"Gastrocnemio", series:4, reps:"15-20", sup:false },
-    { nombre:"Elevación de piernas colgado", objetivo:"Core", series:3, reps:"12-15", sup:true }
+    { nombre:"Hack Squat en máquina", objetivo:"Cuádriceps / Glúteo", series:4, reps:"8-10", sup:false, modo:"normal" },
+    { nombre:"Hip Thrust", objetivo:"Glúteo", series:3, reps:"10-12", sup:false, modo:"normal" },
+    { nombre:"Extensión de cuádriceps", objetivo:"Cuádriceps", series:3, reps:"12-15", sup:false, modo:"normal" },
+    { nombre:"Leg Curl tumbado", objetivo:"Isquiotibiales", series:3, reps:"10-12", sup:true, modo:"normal" },
+    { nombre:"Elevación de talones de pie", objetivo:"Gastrocnemio", series:4, reps:"15-20", sup:false, modo:"normal" },
+    { nombre:"Elevación de piernas colgado", objetivo:"Core", series:3, reps:"12-15", sup:true, modo:"repeticiones" }
   ]},
   { nombre:"Sesión 3 · Hombros + Bíceps + Tríceps",
     prep:[
@@ -478,13 +478,13 @@ const RUTINA_DEFAULT = [
       {tipo:"Prehab", texto:"Face Pulls en polea alta 2×15"}
     ],
     ejercicios:[
-    { nombre:"Press con mancuernas sentado (70-75°)", objetivo:"Deltoides", series:3, reps:"8-10", sup:false },
-    { nombre:"Elevaciones laterales en cable polea baja", objetivo:"Deltoides", series:4, reps:"12-15", sup:false },
-    { nombre:"Rear Delt Fly en cable (plano escapular)", objetivo:"Deltoides posterior", series:3, reps:"15-20", sup:true },
-    { nombre:"Curl alterno con mancuernas (supinación)", objetivo:"Bíceps", series:3, reps:"10-12", sup:false },
-    { nombre:"Extensiones tríceps en polea alta con cuerda", objetivo:"Tríceps", series:3, reps:"10-12", sup:true },
-    { nombre:"Curl de bíceps inclinado con mancuerna", objetivo:"Bíceps", series:3, reps:"10-12", sup:false },
-    { nombre:"Extensión de tríceps overhead", objetivo:"Tríceps", series:3, reps:"10-12", sup:true }
+    { nombre:"Press con mancuernas sentado (70-75°)", objetivo:"Deltoides", series:3, reps:"8-10", sup:false, modo:"normal" },
+    { nombre:"Elevaciones laterales en cable polea baja", objetivo:"Deltoides", series:4, reps:"12-15", sup:false, modo:"normal" },
+    { nombre:"Rear Delt Fly en cable (plano escapular)", objetivo:"Deltoides posterior", series:3, reps:"15-20", sup:true, modo:"normal" },
+    { nombre:"Curl alterno con mancuernas (supinación)", objetivo:"Bíceps", series:3, reps:"10-12", sup:false, modo:"normal" },
+    { nombre:"Extensiones tríceps en polea alta con cuerda", objetivo:"Tríceps", series:3, reps:"10-12", sup:true, modo:"normal" },
+    { nombre:"Curl de bíceps inclinado con mancuerna", objetivo:"Bíceps", series:3, reps:"10-12", sup:false, modo:"normal" },
+    { nombre:"Extensión de tríceps overhead", objetivo:"Tríceps", series:3, reps:"10-12", sup:true, modo:"normal" }
   ]},
   { nombre:"Sesión 4 · Pierna posterior",
     prep:[
@@ -492,12 +492,12 @@ const RUTINA_DEFAULT = [
       {tipo:"Prehab", texto:"Pallof Press isométrico en polea 2×15 por lado"}
     ],
     ejercicios:[
-    { nombre:"Extensión de cadera en banco romano 45°", objetivo:"Isquiotibiales", series:4, reps:"10-12", sup:false },
-    { nombre:"Prensa con pies altos y abiertos", objetivo:"Glúteo / Isquios", series:3, reps:"10-12", sup:false },
-    { nombre:"Desplante búlgaro con mancuernas", objetivo:"Cuádriceps / Glúteo", series:3, reps:"8-10", sup:false },
-    { nombre:"Curl sentado en máquina", objetivo:"Isquiotibiales", series:3, reps:"10-12", sup:false },
-    { nombre:"Abductores en máquina sentado", objetivo:"Glúteo", series:3, reps:"15-20", sup:true },
-    { nombre:"Elevación de talones sentado en máquina", objetivo:"Sóleo", series:4, reps:"15-20", sup:false }
+    { nombre:"Extensión de cadera en banco romano 45°", objetivo:"Isquiotibiales", series:4, reps:"10-12", sup:false, modo:"normal" },
+    { nombre:"Prensa con pies altos y abiertos", objetivo:"Glúteo / Isquios", series:3, reps:"10-12", sup:false, modo:"normal" },
+    { nombre:"Desplante búlgaro con mancuernas", objetivo:"Cuádriceps / Glúteo", series:3, reps:"8-10", sup:false, modo:"normal" },
+    { nombre:"Curl sentado en máquina", objetivo:"Isquiotibiales", series:3, reps:"10-12", sup:false, modo:"normal" },
+    { nombre:"Abductores en máquina sentado", objetivo:"Glúteo", series:3, reps:"15-20", sup:true, modo:"repeticiones" },
+    { nombre:"Elevación de talones sentado en máquina", objetivo:"Sóleo", series:4, reps:"15-20", sup:false, modo:"normal" }
   ]},
   { nombre:"Sesión 5 · Espalda + Pecho + Bíceps",
     prep:[
@@ -505,13 +505,13 @@ const RUTINA_DEFAULT = [
       {tipo:"Prehab", texto:"Face Pulls en polea alta 2×15"}
     ],
     ejercicios:[
-    { nombre:"Dominadas lastradas (o jalón supino)", objetivo:"Dorsales", series:3, reps:"8-10", sup:false },
-    { nombre:"Press inclinado con mancuernas (15°-30°)", objetivo:"Pectoral", series:3, reps:"8-10", sup:true },
-    { nombre:"Remo en polea sentado agarre neutro", objetivo:"Romboides / Dorsal", series:3, reps:"10-12", sup:false },
-    { nombre:"Crossover en polea media", objetivo:"Pectoral", series:3, reps:"12-15", sup:true },
-    { nombre:"Rear Delt Fly en cable", objetivo:"Deltoides posterior", series:3, reps:"15-20", sup:false },
-    { nombre:"Curl con barra EZ", objetivo:"Bíceps", series:4, reps:"10-12", sup:true },
-    { nombre:"Crunches en polea alta", objetivo:"Abdominales", series:3, reps:"12-15", sup:false }
+    { nombre:"Dominadas lastradas (o jalón supino)", objetivo:"Dorsales", series:3, reps:"8-10", sup:false, modo:"normal" },
+    { nombre:"Press inclinado con mancuernas (15°-30°)", objetivo:"Pectoral", series:3, reps:"8-10", sup:true, modo:"normal" },
+    { nombre:"Remo en polea sentado agarre neutro", objetivo:"Romboides / Dorsal", series:3, reps:"10-12", sup:false, modo:"normal" },
+    { nombre:"Crossover en polea media", objetivo:"Pectoral", series:3, reps:"12-15", sup:true, modo:"normal" },
+    { nombre:"Rear Delt Fly en cable", objetivo:"Deltoides posterior", series:3, reps:"15-20", sup:false, modo:"normal" },
+    { nombre:"Curl con barra EZ", objetivo:"Bíceps", series:4, reps:"10-12", sup:true, modo:"normal" },
+    { nombre:"Crunches en polea alta", objetivo:"Abdominales", series:3, reps:"12-15", sup:false, modo:"repeticiones" }
   ]}
 ];
 
@@ -552,7 +552,7 @@ function objetivoDefault(reps){
   return s ? parseInt(s[0]) : "";
 }
 
-/** Normaliza la rutina: series numéricas, objetivos por serie, flag sup. */
+/** Normaliza la rutina: series numéricas, objetivos por serie, flag sup y modo. */
 function normalizarRutina(d){
   d.rutina = d.rutina.map(s=>({
     nombre: s.nombre,
@@ -564,6 +564,7 @@ function normalizarRutina(d){
       ej.reps = ej.reps || "";
       ej.series = Math.max(1, parseInt(ej.series) || 3);
       ej.sup = idx===0 ? false : !!ej.sup;
+      ej.modo = ej.modo || "normal";   // <-- CAMBIO 1/2/3: Añadido campo modo
       let obj = Array.isArray(ej.objetivos) ? ej.objetivos.slice() : [];
       const def = objetivoDefault(ej.reps);
       for(let k=0;k<ej.series;k++){ if(obj[k]===undefined) obj[k]=def; }
@@ -666,12 +667,23 @@ function renderSelectorSesiones(){
    6. REGISTRO DE LA SESIÓN (por series)
    ------------------------------------------------------------------------- */
 function ultimaMarca(sesionNombre, ejercicioNombre){
-  const regs=DB.historial.filter(r=>r.sesion===sesionNombre && r.ejercicio===ejercicioNombre)
+  const regs=DB.historial.filter(r=>r.sesion===sesionNombre && r.ejercicio===ejercicioNombre && !r.omitido)  // <-- CAMBIO 3: excluir omitidos
     .sort((a,b)=> a.fecha<b.fecha?1:(a.fecha>b.fecha?-1:0));
   return regs[0]||null;
 }
 function ejercicioCompleto(bi){
-  return bi.series.length>0 && bi.series.every(s=>parseFloat(s.peso)>0 && parseInt(s.reps)>0);
+  // <-- CAMBIO 3: si está omitido, se considera completo para poder guardar
+  if(bi.omitido) return true;
+  if(!Array.isArray(bi.series) || bi.series.length===0) return false;
+  const modo = bi.modo || "normal";
+  if(modo === "repeticiones"){
+    return bi.series.every(s=>parseInt(s.reps)>0);
+  } else if(modo === "tiempo"){
+    return bi.series.every(s=> (s.tiempo||0) > 0);
+  } else {
+    // modo normal: peso y reps
+    return bi.series.every(s=>parseFloat(s.peso)>0 && parseInt(s.reps)>0);
+  }
 }
 
 /** Sanitiza entrada numérica: quita caracteres inválidos y ceros a la izquierda. */
@@ -695,8 +707,10 @@ function abrirSesion(idx){
       const prev=ultimaMarca(sesion.nombre, ej.nombre);
       const unidad = prev ? prev.unidad : (DB.config.unidadPreferida||"kg");
       const base = prev ? fmtPeso(prev.peso) : "";
-      return { nombre:ej.nombre, unidad, pesoBase:base, comentario:"",
-        series: Array.from({length:ej.series}, ()=>({ peso:base, reps:"", manual:false })) };
+      const modo = ej.modo || "normal";
+      // <-- CAMBIO 1/2/3: inicializar series con campos según modo y omitido false
+      return { nombre:ej.nombre, unidad, pesoBase:base, comentario:"", modo, omitido:false,
+        series: Array.from({length:ej.series}, ()=>({ peso: modo==="repeticiones" ? "" : base, reps: modo==="tiempo" ? "" : "", tiempo: modo==="tiempo" ? 0 : null, manual:false })) };
     })
   };
   $("#sessionPicker").classList.add("hidden");
@@ -741,9 +755,14 @@ function restaurarSesionEnCurso(){
     ejercicios: sesion.ejercicios.map(ej=>{
       const old=b.ejercicios.find(o=>o.nombre===ej.nombre);
       const unidad = old ? old.unidad : (DB.config.unidadPreferida||"kg");
+      const modo = ej.modo || "normal";
       const base = old ? (old.pesoBase||"") : "";
-      const series=Array.from({length:ej.series},(_,k)=>{ const os=old&&old.series&&old.series[k]; return {peso:os?os.peso:base, reps:os?os.reps:"", manual:os?!!os.manual:false}; });
-      return { nombre:ej.nombre, unidad, pesoBase:base, comentario: old?(old.comentario||""):"", series };
+      const omitido = old ? !!old.omitido : false;
+      const series=Array.from({length:ej.series},(_,k)=>{ 
+        const os=old&&old.series&&old.series[k];
+        return {peso: os?os.peso:base, reps: os?os.reps:"", tiempo: os && os.tiempo!=null ? os.tiempo : (modo==="tiempo"?0:null), manual: os?!!os.manual:false};
+      });
+      return { nombre:ej.nombre, unidad, pesoBase:base, comentario: old?(old.comentario||""):"", series, modo, omitido };
     })
   };
   $("#sessionPicker").classList.add("hidden");
@@ -824,11 +843,40 @@ function crearTarjetaEjercicio(sesionNombre, ej, i){
     ? `<b>${fmtPeso(prev.peso)} ${prev.unidad}</b> × ${prev.repeticiones} reps · ${formatearFecha(prev.fecha)}`
     : `<b>—</b> sin registros previos`;
 
+  const modo = b.modo || "normal";
+
+  // Construcción de las filas de series según modo
   let filas="";
   b.series.forEach((s,si)=>{
     const obj = ej.objetivos[si];
     const objTxt = (obj!==""&&obj!=null) ? `objetivo ${obj}` : "";
-    filas+=`
+    if(modo === "repeticiones"){
+      // <-- CAMBIO 1: sin campos de peso
+      filas+=`
+      <div class="serie-row">
+        <div class="serie-lbl">Serie ${si+1}${objTxt?`<span class="obj">${objTxt}</span>`:""}</div>
+        <div class="serie-field" style="margin-left:auto;">
+          <input class="num-in ${s.reps===''?'empty':''}" type="text" inputmode="numeric" enterkeyhint="next" data-sfield="reps" data-si="${si}" placeholder="0" value="${s.reps}">
+          <span class="uf">reps</span>
+        </div>
+      </div>`;
+    } else if(modo === "tiempo"){
+      // <-- CAMBIO 2: temporizador por serie
+      const tiempo = s.tiempo || 0;
+      const mm = String(Math.floor(tiempo/60)).padStart(2,"0");
+      const ss = String(tiempo%60).padStart(2,"0");
+      filas+=`
+      <div class="serie-row" data-tiempo-serie="${si}">
+        <div class="serie-lbl">Serie ${si+1}</div>
+        <div class="timer-display" style="font-size:20px;font-weight:800;font-family:monospace;">${mm}:${ss}</div>
+        <div class="stepper-sm" style="margin-left:auto;">
+          <button class="step-sm" data-timer-toggle="${si}">▶</button>
+          <button class="step-sm" data-timer-reset="${si}">↺</button>
+        </div>
+      </div>`;
+    } else {
+      // Modo normal: peso y reps
+      filas+=`
       <div class="serie-row">
         <div class="serie-lbl">Serie ${si+1}${objTxt?`<span class="obj">${objTxt}</span>`:""}</div>
         <div class="serie-field">
@@ -840,23 +888,29 @@ function crearTarjetaEjercicio(sesionNombre, ej, i){
           <span class="uf">reps</span>
         </div>
       </div>`;
+    }
   });
 
   const tieneCmt = b.comentario && b.comentario.trim();
+  const omitido = !!b.omitido;
   const card=document.createElement("div");
   card.className="ex-card"; card.dataset.idx=i;
   card.innerHTML=`
     <div class="ex-head">
       <div class="ex-head-txt">
         <div class="ex-name">${escapar(ej.nombre)}</div>
-        <div class="ex-target">${escapar(ej.objetivo||"")}${ej.series?` · ${ej.series} series`:""}</div>
+        <div class="ex-target">${escapar(ej.objetivo||"")}${ej.series?` · ${ej.series} series`:""}${modo!=='normal'?` · ${modo==='repeticiones'?'Solo reps':'Por tiempo'}`:''}</div>
       </div>
       <div class="ex-actions">
         <button class="cmt-btn ${tieneCmt?'has':''}" data-cmt aria-label="Comentario">💬</button>
+        <label class="omitir-label" style="font-size:12px;font-weight:600;display:flex;align-items:center;gap:4px;cursor:pointer;">
+          <input type="checkbox" data-omitir ${omitido?'checked':''} style="width:16px;height:16px;accent-color:var(--danger);"> Omitir
+        </label>
         <div class="ex-check">✓</div>
       </div>
     </div>
     <div class="prev-line">Anterior: ${prevTxt}</div>
+    ${modo === "normal" ? `
     <div class="field">
       <div class="field-label">
         <span>Peso base <em>(rellena series vacías)</em></span>
@@ -870,50 +924,117 @@ function crearTarjetaEjercicio(sesionNombre, ej, i){
         <button class="clear-w" data-clear-w aria-label="Borrar todos los pesos" title="Borrar todos los pesos">🗑</button>
       </div>
     </div>
+    ` : ''}
     <div class="series-list">${filas}</div>
     <div class="cmt-wrap ${tieneCmt?'':'hidden'}">
       <textarea class="cmt-area" data-cmt-area placeholder="Notas del ejercicio: p. ej. 'me dolió el codo', 'subir peso la próxima'">${escapar(b.comentario||"")}</textarea>
     </div>`;
 
-  // Toggle kg/lb
-  card.querySelectorAll("[data-unit-toggle] button").forEach(btn=>{
-    btn.addEventListener("click",()=>{
-      b.unidad=btn.dataset.u; DB.config.unidadPreferida=b.unidad; guardarDB();
-      card.querySelectorAll("[data-unit-toggle] button").forEach(x=>x.classList.toggle("on",x.dataset.u===b.unidad));
-      card.querySelectorAll("[data-u-lbl]").forEach(el=>el.textContent=b.unidad);
-      marcarCambio();
+  // Si omitido, deshabilitar campos
+  if(omitido){
+    card.querySelectorAll('input[data-sfield], input[data-basefield], button[data-clear-w], button[data-timer-toggle], button[data-timer-reset]').forEach(el=>el.disabled=true);
+    card.querySelectorAll('.serie-row').forEach(el=>el.style.opacity='0.5');
+  }
+
+  // Toggle kg/lb solo en modo normal
+  if(modo === "normal"){
+    card.querySelectorAll("[data-unit-toggle] button").forEach(btn=>{
+      btn.addEventListener("click",()=>{
+        b.unidad=btn.dataset.u; DB.config.unidadPreferida=b.unidad; guardarDB();
+        card.querySelectorAll("[data-unit-toggle] button").forEach(x=>x.classList.toggle("on",x.dataset.u===b.unidad));
+        card.querySelectorAll("[data-u-lbl]").forEach(el=>el.textContent=b.unidad);
+        marcarCambio();
+      });
     });
-  });
+    // Peso base
+    const baseInp=card.querySelector("input[data-basefield]");
+    baseInp.addEventListener("input",()=>{
+      const val=sanNum(baseInp.value,true);
+      if(val!==baseInp.value) baseInp.value=val;
+      b.pesoBase=val; baseInp.classList.toggle("empty", val==="");
+      propagarBase(i); marcarCambio();
+    });
+    // Borrar pesos
+    card.querySelector("[data-clear-w]").addEventListener("click",()=>{
+      abrirModal(`<h3>¿Borrar todos los pesos?</h3><p>Se eliminará el peso registrado en todas las series de <b>${escapar(ej.nombre)}</b> . El número de repeticiones permanecerá sin cambios.</p>
+        <div class="modal-actions"><button class="btn grey" onclick="cerrarOverlay()">Cancelar</button><button class="btn red" id="okClearW">Borrar pesos</button></div>`);
+      $("#okClearW").onclick=()=>{ cerrarOverlay(); borrarPesosEjercicio(i); };
+    });
+  }
 
-  // Peso base: entrada manual; sólo rellena series vacías (protege lo ya escrito)
-  const baseInp=card.querySelector("input[data-basefield]");
-  baseInp.addEventListener("input",()=>{
-    const val=sanNum(baseInp.value,true);
-    if(val!==baseInp.value) baseInp.value=val;
-    b.pesoBase=val; baseInp.classList.toggle("empty", val==="");
-    propagarBase(i); marcarCambio();
-  });
-
-  // Borrar todos los pesos del ejercicio (con confirmación)
-  card.querySelector("[data-clear-w]").addEventListener("click",()=>{
-    abrirModal(`<h3>¿Borrar todos los pesos?</h3><p>Se eliminará el peso registrado en todas las series de <b>${escapar(ej.nombre)}</b> . El número de repeticiones permanecerá sin cambios.</p>
-      <div class="modal-actions"><button class="btn grey" onclick="cerrarOverlay()">Cancelar</button><button class="btn red" id="okClearW">Borrar pesos</button></div>`);
-    $("#okClearW").onclick=()=>{ cerrarOverlay(); borrarPesosEjercicio(i); };
-  });
-
-  // Series: entrada exclusivamente manual por teclado
+  // Series: entrada manual o temporizador
   card.querySelectorAll("input[data-sfield]").forEach(inp=>{
     const si=+inp.dataset.si, f=inp.dataset.sfield, dec=(f==="peso");
     inp.addEventListener("input",()=>{
       const val=sanNum(inp.value,dec);
       if(val!==inp.value) inp.value=val;
       b.series[si][f]=val; inp.classList.toggle("empty", val==="");
-      if(f==="peso") b.series[si].manual = (val!=="");   // protegida solo si el usuario escribió un valor
+      if(f==="peso") b.series[si].manual = (val!=="");
       actualizarTarjeta(card,i); actualizarEstadoGuardar(); marcarCambio();
     });
   });
 
-  // Comentario por ejercicio
+  // Temporizadores (solo modo tiempo)
+  if(modo === "tiempo"){
+    // Estado del temporizador por serie
+    const timers = {};
+    card.querySelectorAll("[data-timer-toggle]").forEach(btn=>{
+      const si = +btn.dataset.timerToggle;
+      btn.addEventListener("click",()=>{
+        if(b.series[si].timerInterval){
+          // Pausar
+          clearInterval(b.series[si].timerInterval);
+          b.series[si].timerInterval = null;
+          btn.textContent = "▶";
+        } else {
+          // Iniciar / reanudar
+          btn.textContent = "⏸";
+          b.series[si].timerInterval = setInterval(()=>{
+            b.series[si].tiempo = (b.series[si].tiempo||0) + 1;
+            const display = card.querySelector(`[data-tiempo-serie="${si}"] .timer-display`);
+            if(display){
+              const mm = String(Math.floor(b.series[si].tiempo/60)).padStart(2,"0");
+              const ss = String(b.series[si].tiempo%60).padStart(2,"0");
+              display.textContent = `${mm}:${ss}`;
+            }
+            actualizarTarjeta(card,i); actualizarEstadoGuardar(); marcarCambio();
+          }, 1000);
+        }
+      });
+    });
+    card.querySelectorAll("[data-timer-reset]").forEach(btn=>{
+      const si = +btn.dataset.timerReset;
+      btn.addEventListener("click",()=>{
+        if(b.series[si].timerInterval) clearInterval(b.series[si].timerInterval);
+        b.series[si].timerInterval = null;
+        b.series[si].tiempo = 0;
+        const display = card.querySelector(`[data-tiempo-serie="${si}"] .timer-display`);
+        if(display) display.textContent = "00:00";
+        const toggle = card.querySelector(`[data-timer-toggle="${si}"]`);
+        if(toggle) toggle.textContent = "▶";
+        actualizarTarjeta(card,i); actualizarEstadoGuardar(); marcarCambio();
+      });
+    });
+  }
+
+  // Checkbox omitir
+  card.querySelector("[data-omitir]").addEventListener("change",(e)=>{
+    b.omitido = e.target.checked;
+    // Habilitar/deshabilitar campos
+    card.querySelectorAll('input[data-sfield], input[data-basefield], button[data-clear-w], button[data-timer-toggle], button[data-timer-reset]').forEach(el=>el.disabled = b.omitido);
+    card.querySelectorAll('.serie-row').forEach(el=>el.style.opacity = b.omitido?'0.5':'1');
+    if(b.omitido){
+      // Detener temporizadores
+      b.series.forEach(s=>{
+        if(s.timerInterval) clearInterval(s.timerInterval);
+        s.timerInterval = null;
+      });
+      card.querySelectorAll("[data-timer-toggle]").forEach(btn=>btn.textContent = "▶");
+    }
+    actualizarTarjeta(card,i); actualizarEstadoGuardar(); marcarCambio();
+  });
+
+  // Comentario
   const cmtWrap=card.querySelector(".cmt-wrap");
   card.querySelector("[data-cmt]").addEventListener("click",()=>{
     cmtWrap.classList.toggle("hidden");
@@ -960,7 +1081,9 @@ function borrarPesosEjercicio(i){
   toast("Pesos borrados");
 }
 
-function actualizarTarjeta(card,i){ card.classList.toggle("done", ejercicioCompleto(borradorActual.ejercicios[i])); }
+function actualizarTarjeta(card,i){
+  card.classList.toggle("done", ejercicioCompleto(borradorActual.ejercicios[i]));
+}
 function actualizarEstadoGuardar(){
   const total=borradorActual.ejercicios.length;
   const completos=borradorActual.ejercicios.filter(ejercicioCompleto).length;
@@ -978,13 +1101,28 @@ function guardarSesion(){
   const guardadoId = Date.now()+"_"+Math.random().toString(36).slice(2,8);
   const guardadoHora = new Date().toISOString();
   borradorActual.ejercicios.forEach(b=>{
-    const seriesDet=b.series.map(s=>({ peso:redondear(parseFloat(s.peso))||0, reps:parseInt(s.reps)||0 }));
-    const totalReps=seriesDet.reduce((a,s)=>a+(s.reps||0),0);
-    const pesoRep=redondear(Math.max(...seriesDet.map(s=>s.peso||0)));   // PESO MÁXIMO de las series
+    const seriesDet = b.series.map(s=>{
+      if(b.modo === "tiempo"){
+        // <-- CAMBIO 2: guardar tiempo en segundos como repeticiones=0, y agregar campo tiempo
+        return { peso:0, reps:0, tiempo: s.tiempo || 0 };
+      } else if(b.modo === "repeticiones"){
+        // <-- CAMBIO 1: peso=0, reps normales
+        return { peso:0, reps:parseInt(s.reps)||0 };
+      } else {
+        // normal
+        return { peso:redondear(parseFloat(s.peso))||0, reps:parseInt(s.reps)||0 };
+      }
+    });
+    const totalReps = b.modo === "tiempo" ? 0 : seriesDet.reduce((a,s)=>a+(s.reps||0),0);
+    const pesoRep = b.modo === "normal" ? redondear(Math.max(...seriesDet.map(s=>s.peso||0))) : 0;
     DB.historial.push({
       fecha, sesion:sesion.nombre, ejercicio:b.nombre,
-      peso:pesoRep, unidad:b.unidad, repeticiones:totalReps, series:seriesDet,
-      comentario:(b.comentario||"").trim(), guardadoId, guardadoHora
+      peso:pesoRep, unidad:b.unidad, repeticiones:totalReps,
+      series:seriesDet,
+      comentario:(b.comentario||"").trim(),
+      guardadoId, guardadoHora,
+      omitido: !!b.omitido,              // <-- CAMBIO 3
+      modo: b.modo || "normal"           // <-- CAMBIO 1/2: guardar modo para referencia
     });
   });
   guardarDB(); limpiarBorrador(); cambiosSinGuardar=false;
@@ -1018,11 +1156,12 @@ function refrescarProgreso(){
 /** Serie temporal de un ejercicio, agregada por fecha. modo: 'peso' | 'reps'. */
 function serieEjercicio(sesionNombre, ejercicioNombre, unidad, modo){
   const byDate={};
-  DB.historial.filter(r=>r.sesion===sesionNombre && r.ejercicio===ejercicioNombre).forEach(r=>{
-    const d = byDate[r.fecha] || (byDate[r.fecha]={peso:0, reps:0});
-    d.peso = Math.max(d.peso, convertir(r.peso, r.unidad, unidad));
-    d.reps += (r.repeticiones||0);
-  });
+  DB.historial.filter(r=>r.sesion===sesionNombre && r.ejercicio===ejercicioNombre && !r.omitido) // <-- CAMBIO 3: excluir omitidos
+    .forEach(r=>{
+      const d = byDate[r.fecha] || (byDate[r.fecha]={peso:0, reps:0});
+      d.peso = Math.max(d.peso, convertir(r.peso, r.unidad, unidad));
+      d.reps += (r.repeticiones||0);
+    });
   return Object.keys(byDate).sort().map(f=>({
     x:f, y: modo==="reps" ? byDate[f].reps : redondear(byDate[f].peso)
   }));
@@ -1177,7 +1316,11 @@ function dibujarConCanvas(canvas, datasets, sufijo){
 let calVista="month"; let calRef=new Date();
 function diasEntrenados(){
   const m={};
-  DB.historial.forEach(r=>{ if(!m[r.fecha]) m[r.fecha]={count:0,ejercicios:new Set()}; m[r.fecha].ejercicios.add(r.ejercicio); });
+  DB.historial.forEach(r=>{
+    if(r.omitido) return;  // <-- CAMBIO 3: no contar omitidos
+    if(!m[r.fecha]) m[r.fecha]={count:0,ejercicios:new Set()};
+    m[r.fecha].ejercicios.add(r.ejercicio);
+  });
   Object.keys(m).forEach(k=> m[k].count=m[k].ejercicios.size);
   return m;
 }
@@ -1209,7 +1352,7 @@ function renderMes(){
 function renderSemana(){
   const mapa=diasEntrenados(); const dias=[];
   for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); dias.push(d); }
-  const pesoDia=(iso)=>{ let t=0; DB.historial.filter(r=>r.fecha===iso).forEach(r=>t+=convertir(r.peso,r.unidad,"kg")*r.repeticiones); return t; };
+  const pesoDia=(iso)=>{ let t=0; DB.historial.filter(r=>r.fecha===iso && !r.omitido).forEach(r=>t+=convertir(r.peso,r.unidad,"kg")*r.repeticiones); return t; };
   const totales=dias.map(d=>pesoDia(isoDe(d))); const maxT=Math.max(...totales,1);
   const nom=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
   let html=`<div class="week-wrap">`;
@@ -1275,11 +1418,27 @@ function abrirDetalleDia(iso){
     const hora=formatearHora(primero.guardadoHora);
     let filas="";
     items.forEach(r=>{
-      const brk = Array.isArray(r.series)&&r.series.length ? r.series.map(s=>s.reps).join(" · ") : r.repeticiones;
-      const cmt = r.comentario && r.comentario.trim() ? `<div class="de-cmt">💬 ${escapar(r.comentario)}</div>` : "";
-      filas+=`<div class="detail-ex">
-        <div class="de-name">${escapar(r.ejercicio)}<div class="de-reps">Series: ${brk} — total ${r.repeticiones} reps</div>${cmt}</div>
-        <div class="de-val">${fmtPeso(r.peso)} ${r.unidad}</div></div>`;
+      if(r.omitido){
+        // <-- CAMBIO 3: mostrar como omitido
+        filas+=`<div class="detail-ex">
+          <div class="de-name">${escapar(r.ejercicio)}<div class="de-reps">Omitido</div></div>
+          <div class="de-val" style="color:var(--danger)">—</div></div>`;
+      } else if(r.modo === "tiempo"){
+        // <-- CAMBIO 2: mostrar tiempos
+        const tiempos = (r.series||[]).map(s=>{
+          const t = s.tiempo || 0;
+          return `${String(Math.floor(t/60)).padStart(2,"0")}:${String(t%60).padStart(2,"0")}`;
+        }).join(" · ");
+        filas+=`<div class="detail-ex">
+          <div class="de-name">${escapar(r.ejercicio)}<div class="de-reps">Tiempos: ${tiempos}</div></div>
+          <div class="de-val">⏱</div></div>`;
+      } else {
+        const brk = Array.isArray(r.series)&&r.series.length ? r.series.map(s=>s.reps).join(" · ") : r.repeticiones;
+        const cmt = r.comentario && r.comentario.trim() ? `<div class="de-cmt">💬 ${escapar(r.comentario)}</div>` : "";
+        filas+=`<div class="detail-ex">
+          <div class="de-name">${escapar(r.ejercicio)}<div class="de-reps">Series: ${brk} — total ${r.repeticiones} reps</div>${cmt}</div>
+          <div class="de-val">${fmtPeso(r.peso)} ${r.unidad}</div></div>`;
+      }
     });
     cuerpo+=`<div class="reg-card">
       <div class="reg-head"><h4 class="reg-title">${escapar(primero.sesion)}</h4>${hora?`<span class="reg-hora">${hora}</span>`:""}</div>
@@ -1317,7 +1476,9 @@ function editarRegistro(clave){
     clave, fecha:items[0].fecha, sesion:items[0].sesion,
     ejercicios: items.map(r=>({
       ejercicio:r.ejercicio, unidad:r.unidad, comentario:r.comentario||"",
-      series: (r.series&&r.series.length?r.series:[{peso:r.peso,reps:r.repeticiones}]).map(s=>({peso:String(s.peso??""), reps:String(s.reps??"")}))
+      omitido: !!r.omitido,
+      modo: r.modo || "normal",
+      series: (r.series&&r.series.length?r.series:[{peso:r.peso,reps:r.repeticiones}]).map(s=>({peso:String(s.peso??""), reps:String(s.reps??""), tiempo:s.tiempo||0}))
     }))
   };
   renderEditorRegistro();
@@ -1332,14 +1493,27 @@ function renderEditorRegistro(){
   er.ejercicios.forEach((ej,ei)=>{
     let filas="";
     ej.series.forEach((s,si)=>{
-      filas+=`<div class="serie-row">
-        <div class="serie-lbl">Serie ${si+1}</div>
-        <div class="serie-field"><input class="num-in" type="text" inputmode="decimal" data-reg-peso="${ei}_${si}" value="${s.peso}" placeholder="—"><span class="uf">${ej.unidad}</span></div>
-        <div class="serie-field"><input class="num-in" type="text" inputmode="numeric" data-reg-reps="${ei}_${si}" value="${s.reps}" placeholder="0"><span class="uf">reps</span></div>
-      </div>`;
+      if(ej.modo === "tiempo"){
+        const mm = String(Math.floor(s.tiempo/60)).padStart(2,"0");
+        const ss = String(s.tiempo%60).padStart(2,"0");
+        filas+=`<div class="serie-row">
+          <div class="serie-lbl">Serie ${si+1}</div>
+          <div style="margin-left:auto;font-size:20px;font-weight:800;">${mm}:${ss}</div>
+          <input type="hidden" data-reg-tiempo="${ei}_${si}" value="${s.tiempo}">
+        </div>`;
+      } else {
+        filas+=`<div class="serie-row">
+          <div class="serie-lbl">Serie ${si+1}</div>
+          <div class="serie-field"><input class="num-in" type="text" inputmode="decimal" data-reg-peso="${ei}_${si}" value="${s.peso}" placeholder="—"><span class="uf">${ej.unidad}</span></div>
+          <div class="serie-field"><input class="num-in" type="text" inputmode="numeric" data-reg-reps="${ei}_${si}" value="${s.reps}" placeholder="0"><span class="uf">reps</span></div>
+        </div>`;
+      }
     });
+    const omitidoChecked = ej.omitido ? 'checked' : '';
     html+=`<div class="ex-card">
-      <div class="ex-head"><div class="ex-head-txt"><div class="ex-name">${escapar(ej.ejercicio)}</div></div></div>
+      <div class="ex-head"><div class="ex-head-txt"><div class="ex-name">${escapar(ej.ejercicio)}</div></div>
+        <label style="font-size:12px;display:flex;align-items:center;gap:4px;"><input type="checkbox" data-reg-omitir="${ei}" ${omitidoChecked}> Omitido</label>
+      </div>
       <div class="series-list">${filas}</div>
       <div class="cmt-wrap"><textarea class="cmt-area" data-reg-cmt="${ei}" placeholder="Notas del ejercicio">${escapar(ej.comentario)}</textarea></div>
     </div>`;
@@ -1361,6 +1535,9 @@ function renderEditorRegistro(){
   $$("#overlay [data-reg-cmt]").forEach(ta=> ta.oninput=()=>{
     editorRegistroTemp.ejercicios[+ta.dataset.regCmt].comentario=ta.value;
   });
+  $$("#overlay [data-reg-omitir]").forEach(chk=> chk.onchange=()=>{
+    editorRegistroTemp.ejercicios[+chk.dataset.regOmitir].omitido = chk.checked;
+  });
 }
 function confirmarGuardarRegistro(){
   abrirModal(`<h3>Guardar cambios</h3><p>¿Estás seguro de querer editar y guardar los cambios de este registro?</p>
@@ -1372,11 +1549,18 @@ function confirmarGuardarRegistro(){
     const idxOriginales=[]; DB.historial.forEach((r,idx)=>{ if(claveRegistro(r)===er.clave) idxOriginales.push(idx); });
     const guardadoId = (idxOriginales.length && DB.historial[idxOriginales[0]].guardadoId) || (Date.now()+"_"+Math.random().toString(36).slice(2,8));
     const nuevos = er.ejercicios.map(ej=>{
-      const seriesDet=ej.series.map(s=>({ peso:redondear(parseFloat(s.peso))||0, reps:parseInt(s.reps)||0 }));
-      const totalReps=seriesDet.reduce((a,s)=>a+(s.reps||0),0);
-      const pesoRep=redondear(Math.max(...seriesDet.map(s=>s.peso||0)));
+      const seriesDet = ej.series.map(s=>{
+        if(ej.modo === "tiempo"){
+          return { peso:0, reps:0, tiempo:parseInt(s.tiempo)||0 };
+        } else {
+          return { peso:redondear(parseFloat(s.peso))||0, reps:parseInt(s.reps)||0 };
+        }
+      });
+      const totalReps = ej.modo === "tiempo" ? 0 : seriesDet.reduce((a,s)=>a+(s.reps||0),0);
+      const pesoRep = ej.modo === "normal" ? redondear(Math.max(...seriesDet.map(s=>s.peso||0))) : 0;
       return { fecha, sesion:er.sesion, ejercicio:ej.ejercicio, peso:pesoRep, unidad:ej.unidad,
-        repeticiones:totalReps, series:seriesDet, comentario:(ej.comentario||"").trim(), guardadoId, guardadoHora:new Date().toISOString() };
+        repeticiones:totalReps, series:seriesDet, comentario:(ej.comentario||"").trim(), guardadoId, guardadoHora:new Date().toISOString(),
+        omitido: !!ej.omitido, modo: ej.modo };
     });
     DB.historial = DB.historial.filter((r,idx)=> idxOriginales.indexOf(idx)===-1).concat(nuevos);
     guardarDB(); cerrarOverlay(); editorRegistroTemp=null;
@@ -1448,12 +1632,12 @@ function eliminarTodo(){
 }
 
 /* -------------------------------------------------------------------------
-   12. EDITOR DE RUTINA (nombres, series, objetivos, superserie)
+   12. EDITOR DE RUTINA (nombres, series, objetivos, superserie, modo)
    ------------------------------------------------------------------------- */
 let editorTemp=null;
 function abrirEditor(){ editorTemp=clonar(DB.rutina); normalizarRutina({rutina:editorTemp}); renderEditor(); }
 function renderEditor(){
-  let html=`<div class="grabber"></div><h2>Editar rutina</h2><p class="sub">Ajusta series, repeticiones objetivo y superseries</p><div id="editorList">`;
+  let html=`<div class="grabber"></div><h2>Editar rutina</h2><p class="sub">Ajusta series, repeticiones objetivo, superseries y tipo de ejercicio</p><div id="editorList">`;
   editorTemp.forEach((s,si)=>{
     html+=`<div class="editor-session">
       <div class="es-head">
@@ -1487,8 +1671,17 @@ function renderEditor(){
             <b>${e.series}</b>
             <button class="mini-btn" onclick="cambiarSeries(${si},${ei},1)">+</button>
           </div>
-          <div class="ed-obj"><span>Reps objetivo por serie</span>
+          <div class="ed-obj"><span>Reps objetivo por serie (aplican solo para peso/reps)</span>
             <div class="ed-obj-list">${e.objetivos.map((o,k)=>`<input class="mini-num" type="number" inputmode="numeric" data-ed-obj="${si}_${ei}_${k}" value="${o===''||o==null?"":o}" placeholder="—" title="Serie ${k+1}">`).join("")}</div>
+          </div>
+          <!-- CAMBIO 1/2: selector de modo -->
+          <div class="ed-series" style="font-size:12.5px;color:var(--text-2);font-weight:700;">
+            <span>Tipo de ejercicio</span>
+            <select class="ed-mode-select" data-ed-modo="${si}_${ei}" style="background:var(--card);border:none;border-radius:9px;color:var(--text);font-size:13px;font-weight:600;padding:8px;">
+              <option value="normal" ${(e.modo||'normal')==='normal'?'selected':''}>Peso y reps</option>
+              <option value="repeticiones" ${e.modo==='repeticiones'?'selected':''}>Solo reps</option>
+              <option value="tiempo" ${e.modo==='tiempo'?'selected':''}>Por tiempo</option>
+            </select>
           </div>
         </div></div>`;
     });
@@ -1504,6 +1697,7 @@ function renderEditor(){
   $$("#editorList [data-ed-obj]").forEach(inp=> inp.oninput=()=>{ const [si,ei,k]=inp.dataset.edObj.split("_").map(Number); editorTemp[si].ejercicios[ei].objetivos[k]= inp.value===""?"":parseInt(inp.value); });
   $$("#editorList [data-ed-prep-txt]").forEach(inp=> inp.oninput=()=>{ const [si,pi]=inp.dataset.edPrepTxt.split("_").map(Number); editorTemp[si].prep[pi].texto=inp.value; });
   $$("#editorList [data-ed-prep-tipo]").forEach(sel=> sel.onchange=()=>{ const [si,pi]=sel.dataset.edPrepTipo.split("_").map(Number); editorTemp[si].prep[pi].tipo=sel.value; });
+  $$("#editorList [data-ed-modo]").forEach(sel=> sel.onchange=()=>{ const [si,ei]=sel.dataset.edModo.split("_").map(Number); editorTemp[si].ejercicios[ei].modo=sel.value; });
 }
 function cambiarSeries(si,ei,delta){
   const e=editorTemp[si].ejercicios[ei];
@@ -1513,9 +1707,9 @@ function cambiarSeries(si,ei,delta){
   else e.objetivos.length=n;
   renderEditor();
 }
-function agregarSesionEditor(){ editorTemp.push({nombre:`Sesión ${editorTemp.length+1}`, prep:[], ejercicios:[{nombre:"Nuevo ejercicio",objetivo:"",series:3,reps:"",sup:false,objetivos:["","",""]}]}); renderEditor(); }
+function agregarSesionEditor(){ editorTemp.push({nombre:`Sesión ${editorTemp.length+1}`, prep:[], ejercicios:[{nombre:"Nuevo ejercicio",objetivo:"",series:3,reps:"",sup:false,modo:"normal",objetivos:["","",""]}]}); renderEditor(); }
 function borrarSesionEditor(si){ editorTemp.splice(si,1); renderEditor(); }
-function agregarEjercicioEditor(si){ editorTemp[si].ejercicios.push({nombre:"Nuevo ejercicio",objetivo:"",series:3,reps:"",sup:false,objetivos:["","",""]}); renderEditor(); }
+function agregarEjercicioEditor(si){ editorTemp[si].ejercicios.push({nombre:"Nuevo ejercicio",objetivo:"",series:3,reps:"",sup:false,modo:"normal",objetivos:["","",""]}); renderEditor(); }
 function borrarEjercicioEditor(si,ei){ editorTemp[si].ejercicios.splice(ei,1); renderEditor(); }
 function agregarPrepEditor(si){ if(!editorTemp[si].prep) editorTemp[si].prep=[]; editorTemp[si].prep.push({tipo:"Calentamiento",texto:""}); renderEditor(); }
 function borrarPrepEditor(si,pi){ editorTemp[si].prep.splice(pi,1); renderEditor(); }
@@ -1543,9 +1737,14 @@ function reconciliarBorrador(){
   borradorActual.ejercicios = sesion.ejercicios.map(ej=>{
     const old = borradorActual.ejercicios.find(o=>o.nombre===ej.nombre);
     const unidad = old ? old.unidad : (DB.config.unidadPreferida||"kg");
+    const modo = ej.modo || "normal";
     const base = old ? old.pesoBase : "";
-    const series = Array.from({length:ej.series},(_,k)=>{ const os = old && old.series[k]; return { peso: os?os.peso:base, reps: os?os.reps:"", manual: os?!!os.manual:false }; });
-    return { nombre:ej.nombre, unidad, pesoBase:base, comentario: old?(old.comentario||""):"", series };
+    const omitido = old ? !!old.omitido : false;
+    const series = Array.from({length:ej.series},(_,k)=>{ 
+      const os = old && old.series[k]; 
+      return { peso: os?os.peso:base, reps: os?os.reps:"", tiempo: os && os.tiempo!=null ? os.tiempo : (modo==="tiempo"?0:null), manual: os?!!os.manual:false }; 
+    });
+    return { nombre:ej.nombre, unidad, pesoBase:base, comentario: old?(old.comentario||""):"", series, modo, omitido };
   });
   renderLogger(); guardarBorrador();
 }
