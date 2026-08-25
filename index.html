@@ -273,6 +273,40 @@ input,textarea{user-select:text;}
 .mini-btn.add{color:var(--accent);}
 .add-line{width:100%;padding:11px;border-radius:11px;background:var(--card-2);color:var(--accent);font-size:14px;font-weight:700;margin-top:4px;}
 
+/* Estilos para el selector de modo (editor) */
+.ed-mode-select{
+  background:var(--card);border:none;border-radius:9px;color:var(--text);font-size:13px;font-weight:600;padding:8px;
+  -webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2398989f' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;
+}
+
+/* Checkbox de omitir estilo iOS */
+.omitir-check{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--text-2);cursor:pointer;}
+.omitir-check input[type=checkbox]{appearance:none;-webkit-appearance:none;width:20px;height:20px;border-radius:6px;border:2px solid var(--sep);background:var(--card-2);transition:all .2s;position:relative;cursor:pointer;}
+.omitir-check input[type=checkbox]:checked{background:var(--danger);border-color:var(--danger);}
+.omitir-check input[type=checkbox]:checked::after{content:"✓";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:14px;font-weight:700;}
+
+/* Estilos para el temporizador de cuenta regresiva */
+.timer-container{display:flex;align-items:center;gap:8px;margin-top:8px;}
+.timer-display{
+  flex:1;background:var(--card-2);border-radius:12px;padding:12px;text-align:center;
+  font-size:28px;font-weight:800;letter-spacing:-0.5px;font-variant-numeric:tabular-nums;
+  color:var(--text);min-width:0;transition:all .3s;
+}
+.timer-display.finished{background:var(--accent-2);color:var(--bg);animation:popIn .4s;}
+.timer-input{
+  width:80px;background:var(--card-2);border:1.5px solid var(--sep);border-radius:9px;color:var(--text);
+  text-align:center;font-size:16px;font-weight:700;padding:8px 4px;outline:none;transition:border-color .15s;
+}
+.timer-input:focus{border-color:var(--accent);}
+.timer-btns{display:flex;gap:6px;margin-left:auto;}
+.timer-btn{
+  width:38px;height:38px;border-radius:10px;background:var(--card-2);color:var(--text);
+  display:flex;align-items:center;justify-content:center;font-size:18px;transition:transform .1s, background .2s;
+}
+.timer-btn:active{transform:scale(.9);background:#4a4a4d;}
+.timer-btn:disabled{opacity:.4;pointer-events:none;}
+
 /* Toast + check */
 .toast{position:fixed;left:50%;bottom:calc(var(--tabbar-h) + var(--safe-bottom) + 20px);transform:translateX(-50%) translateY(20px);background:rgba(44,44,46,.96);backdrop-filter:blur(10px);color:var(--text);padding:13px 20px;border-radius:14px;font-size:14.5px;font-weight:600;z-index:200;display:flex;align-items:center;gap:10px;opacity:0;pointer-events:none;transition:.3s;box-shadow:0 10px 30px rgba(0,0,0,.4);max-width:90%;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -679,6 +713,7 @@ function ejercicioCompleto(bi){
   if(modo === "repeticiones"){
     return bi.series.every(s=>parseInt(s.reps)>0);
   } else if(modo === "tiempo"){
+    // <-- CAMBIO 2: validar que cada serie tenga un tiempo mayor que 0 (objetivo o transcurrido)
     return bi.series.every(s=> (s.tiempo||0) > 0);
   } else {
     // modo normal: peso y reps
@@ -861,17 +896,21 @@ function crearTarjetaEjercicio(sesionNombre, ej, i){
         </div>
       </div>`;
     } else if(modo === "tiempo"){
-      // <-- CAMBIO 2: temporizador por serie
+      // <-- CAMBIO 2: temporizador de cuenta regresiva configurable
+      // Mostramos un input para el tiempo objetivo (mm:ss) y botones de control
       const tiempo = s.tiempo || 0;
       const mm = String(Math.floor(tiempo/60)).padStart(2,"0");
       const ss = String(tiempo%60).padStart(2,"0");
       filas+=`
       <div class="serie-row" data-tiempo-serie="${si}">
         <div class="serie-lbl">Serie ${si+1}</div>
-        <div class="timer-display" style="font-size:20px;font-weight:800;font-family:monospace;">${mm}:${ss}</div>
-        <div class="stepper-sm" style="margin-left:auto;">
-          <button class="step-sm" data-timer-toggle="${si}">▶</button>
-          <button class="step-sm" data-timer-reset="${si}">↺</button>
+        <div class="timer-container">
+          <input class="timer-input" type="text" placeholder="mm:ss" data-timer-input="${si}" value="${mm}:${ss}">
+          <div class="timer-display" data-timer-display="${si}">${mm}:${ss}</div>
+          <div class="timer-btns">
+            <button class="timer-btn" data-timer-toggle="${si}" title="Iniciar/Pausar">▶</button>
+            <button class="timer-btn" data-timer-reset="${si}" title="Reiniciar">↺</button>
+          </div>
         </div>
       </div>`;
     } else {
@@ -903,9 +942,7 @@ function crearTarjetaEjercicio(sesionNombre, ej, i){
       </div>
       <div class="ex-actions">
         <button class="cmt-btn ${tieneCmt?'has':''}" data-cmt aria-label="Comentario">💬</button>
-        <label class="omitir-label" style="font-size:12px;font-weight:600;display:flex;align-items:center;gap:4px;cursor:pointer;">
-          <input type="checkbox" data-omitir ${omitido?'checked':''} style="width:16px;height:16px;accent-color:var(--danger);"> Omitir
-        </label>
+        <label class="omitir-check"><input type="checkbox" data-omitir ${omitido?'checked':''}> Omitir</label>
         <div class="ex-check">✓</div>
       </div>
     </div>
@@ -932,7 +969,7 @@ function crearTarjetaEjercicio(sesionNombre, ej, i){
 
   // Si omitido, deshabilitar campos
   if(omitido){
-    card.querySelectorAll('input[data-sfield], input[data-basefield], button[data-clear-w], button[data-timer-toggle], button[data-timer-reset]').forEach(el=>el.disabled=true);
+    card.querySelectorAll('input[data-sfield], input[data-basefield], button[data-clear-w], button[data-timer-toggle], button[data-timer-reset], .timer-input').forEach(el=>el.disabled=true);
     card.querySelectorAll('.serie-row').forEach(el=>el.style.opacity='0.5');
   }
 
@@ -974,42 +1011,94 @@ function crearTarjetaEjercicio(sesionNombre, ej, i){
     });
   });
 
-  // Temporizadores (solo modo tiempo)
+  // Temporizadores de cuenta regresiva (solo modo tiempo)
   if(modo === "tiempo"){
-    // Estado del temporizador por serie
-    const timers = {};
+    // Convertir mm:ss a segundos
+    function parseTiempo(str){
+      const parts = str.split(":").map(Number);
+      if(parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])){
+        return (parts[0]*60 + parts[1]);
+      }
+      return 0;
+    }
+    // Formatear segundos a mm:ss
+    function fmtTiempo(seg){
+      const mm = String(Math.floor(seg/60)).padStart(2,"0");
+      const ss = String(seg%60).padStart(2,"0");
+      return `${mm}:${ss}`;
+    }
+
+    card.querySelectorAll(".timer-input").forEach(inp=>{
+      const si = +inp.dataset.timerInput;
+      inp.addEventListener("change",()=>{
+        let val = inp.value.trim();
+        // Aceptar formatos como "90", "1:30", "01:30"
+        let segundos = parseTiempo(val);
+        if(segundos > 0){
+          b.series[si].tiempo = segundos;
+          b.series[si].tiempoInicial = segundos;
+          // Actualizar display
+          const display = card.querySelector(`[data-timer-display="${si}"]`);
+          if(display) display.textContent = fmtTiempo(segundos);
+          actualizarTarjeta(card,i); actualizarEstadoGuardar(); marcarCambio();
+        }
+      });
+    });
+
     card.querySelectorAll("[data-timer-toggle]").forEach(btn=>{
       const si = +btn.dataset.timerToggle;
       btn.addEventListener("click",()=>{
-        if(b.series[si].timerInterval){
+        const serie = b.series[si];
+        if(serie.timerInterval){
           // Pausar
-          clearInterval(b.series[si].timerInterval);
-          b.series[si].timerInterval = null;
+          clearInterval(serie.timerInterval);
+          serie.timerInterval = null;
           btn.textContent = "▶";
         } else {
-          // Iniciar / reanudar
-          btn.textContent = "⏸";
-          b.series[si].timerInterval = setInterval(()=>{
-            b.series[si].tiempo = (b.series[si].tiempo||0) + 1;
-            const display = card.querySelector(`[data-tiempo-serie="${si}"] .timer-display`);
-            if(display){
-              const mm = String(Math.floor(b.series[si].tiempo/60)).padStart(2,"0");
-              const ss = String(b.series[si].tiempo%60).padStart(2,"0");
-              display.textContent = `${mm}:${ss}`;
+          // Si no hay tiempo restante, usar el tiempo inicial o el del input
+          if(!serie.tiempo || serie.tiempo <= 0){
+            const inp = card.querySelector(`[data-timer-input="${si}"]`);
+            const seg = parseTiempo(inp.value);
+            if(seg > 0){
+              serie.tiempo = seg;
+              serie.tiempoInicial = seg;
+            } else {
+              toast("Configura un tiempo válido (mm:ss)","⚠️");
+              return;
             }
-            actualizarTarjeta(card,i); actualizarEstadoGuardar(); marcarCambio();
+          }
+          // Iniciar cuenta regresiva
+          btn.textContent = "⏸";
+          serie.timerInterval = setInterval(()=>{
+            if(serie.tiempo > 0){
+              serie.tiempo--;
+              const display = card.querySelector(`[data-timer-display="${si}"]`);
+              if(display) display.textContent = fmtTiempo(serie.tiempo);
+              actualizarTarjeta(card,i); actualizarEstadoGuardar(); marcarCambio();
+              if(serie.tiempo <= 0){
+                // Finalizado
+                clearInterval(serie.timerInterval);
+                serie.timerInterval = null;
+                btn.textContent = "▶";
+                display.classList.add("finished");
+                setTimeout(()=> display.classList.remove("finished"), 800);
+                toast("Serie completada", "✅");
+              }
+            }
           }, 1000);
         }
       });
     });
+
     card.querySelectorAll("[data-timer-reset]").forEach(btn=>{
       const si = +btn.dataset.timerReset;
       btn.addEventListener("click",()=>{
-        if(b.series[si].timerInterval) clearInterval(b.series[si].timerInterval);
-        b.series[si].timerInterval = null;
-        b.series[si].tiempo = 0;
-        const display = card.querySelector(`[data-tiempo-serie="${si}"] .timer-display`);
-        if(display) display.textContent = "00:00";
+        const serie = b.series[si];
+        if(serie.timerInterval) clearInterval(serie.timerInterval);
+        serie.timerInterval = null;
+        serie.tiempo = serie.tiempoInicial || 0;
+        const display = card.querySelector(`[data-timer-display="${si}"]`);
+        if(display) display.textContent = fmtTiempo(serie.tiempo);
         const toggle = card.querySelector(`[data-timer-toggle="${si}"]`);
         if(toggle) toggle.textContent = "▶";
         actualizarTarjeta(card,i); actualizarEstadoGuardar(); marcarCambio();
@@ -1021,7 +1110,7 @@ function crearTarjetaEjercicio(sesionNombre, ej, i){
   card.querySelector("[data-omitir]").addEventListener("change",(e)=>{
     b.omitido = e.target.checked;
     // Habilitar/deshabilitar campos
-    card.querySelectorAll('input[data-sfield], input[data-basefield], button[data-clear-w], button[data-timer-toggle], button[data-timer-reset]').forEach(el=>el.disabled = b.omitido);
+    card.querySelectorAll('input[data-sfield], input[data-basefield], button[data-clear-w], button[data-timer-toggle], button[data-timer-reset], .timer-input').forEach(el=>el.disabled = b.omitido);
     card.querySelectorAll('.serie-row').forEach(el=>el.style.opacity = b.omitido?'0.5':'1');
     if(b.omitido){
       // Detener temporizadores
@@ -1103,7 +1192,7 @@ function guardarSesion(){
   borradorActual.ejercicios.forEach(b=>{
     const seriesDet = b.series.map(s=>{
       if(b.modo === "tiempo"){
-        // <-- CAMBIO 2: guardar tiempo en segundos como repeticiones=0, y agregar campo tiempo
+        // <-- CAMBIO 2: guardar tiempo en segundos (el tiempo restante o el objetivo alcanzado)
         return { peso:0, reps:0, tiempo: s.tiempo || 0 };
       } else if(b.modo === "repeticiones"){
         // <-- CAMBIO 1: peso=0, reps normales
@@ -1512,7 +1601,7 @@ function renderEditorRegistro(){
     const omitidoChecked = ej.omitido ? 'checked' : '';
     html+=`<div class="ex-card">
       <div class="ex-head"><div class="ex-head-txt"><div class="ex-name">${escapar(ej.ejercicio)}</div></div>
-        <label style="font-size:12px;display:flex;align-items:center;gap:4px;"><input type="checkbox" data-reg-omitir="${ei}" ${omitidoChecked}> Omitido</label>
+        <label class="omitir-check"><input type="checkbox" data-reg-omitir="${ei}" ${omitidoChecked}> Omitido</label>
       </div>
       <div class="series-list">${filas}</div>
       <div class="cmt-wrap"><textarea class="cmt-area" data-reg-cmt="${ei}" placeholder="Notas del ejercicio">${escapar(ej.comentario)}</textarea></div>
@@ -1677,7 +1766,7 @@ function renderEditor(){
           <!-- CAMBIO 1/2: selector de modo -->
           <div class="ed-series" style="font-size:12.5px;color:var(--text-2);font-weight:700;">
             <span>Tipo de ejercicio</span>
-            <select class="ed-mode-select" data-ed-modo="${si}_${ei}" style="background:var(--card);border:none;border-radius:9px;color:var(--text);font-size:13px;font-weight:600;padding:8px;">
+            <select class="ed-mode-select" data-ed-modo="${si}_${ei}">
               <option value="normal" ${(e.modo||'normal')==='normal'?'selected':''}>Peso y reps</option>
               <option value="repeticiones" ${e.modo==='repeticiones'?'selected':''}>Solo reps</option>
               <option value="tiempo" ${e.modo==='tiempo'?'selected':''}>Por tiempo</option>
