@@ -293,6 +293,13 @@ input,textarea{user-select:text;}
   font-size:28px;font-weight:800;letter-spacing:-0.5px;font-variant-numeric:tabular-nums;
   color:var(--text);min-width:0;transition:all .3s;
 }
+/* [FIX] Fila del cronómetro: antes se aplastaba en pantallas estrechas porque
+   input + reloj + 2 botones no caben en una sola línea junto a "Serie N". */
+.serie-row.timer-row{flex-wrap:wrap;gap:8px 6px;}
+.timer-row .timer-display{flex:1 1 auto;min-width:86px;padding:6px 8px;font-size:24px;background:transparent;}
+.timer-row .timer-btns{margin-left:auto;}
+.timer-obj{flex:0 0 100%;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;}
+.timer-obj .timer-input{width:104px;}
 .timer-display.finished{background:var(--accent-2);color:var(--bg);animation:popIn .4s;}
 .timer-input{
   width:80px;background:var(--card-2);border:1.5px solid var(--sep);border-radius:9px;color:var(--text);
@@ -393,6 +400,11 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.6;
 .reg-hora{font-size:11.5px;color:var(--text-3);font-weight:700;white-space:nowrap;}
 .reg-card .detail-ex{background:var(--card-2);}
 .reg-actions{display:flex;gap:8px;margin-top:4px;}
+/* [FIX] Fila para corregir la unidad (kg/lb) de un registro guardado */
+.reg-unidad-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;}
+.reg-unidad-ctrl{display:flex;align-items:center;gap:8px;}
+.aplicar-todos{font-size:11px;font-weight:700;color:var(--accent);text-transform:none;letter-spacing:0;padding:5px 8px;border-radius:8px;background:var(--card-2);}
+.aplicar-todos:active{transform:scale(.95);}
 .btn.sm{padding:10px;font-size:13.5px;}
 </style>
 </head>
@@ -558,6 +570,61 @@ const KG_TO_LB = 2.20462;
 
 let DB = cargarDB();
 let borradorActual = null;
+
+/* ====== [FIX CRONÓMETRO] Estado global y utilidades de tiempo ======
+   Antes cada serie guardaba su propio setInterval en s.timerInterval y nunca
+   se limpiaba: quedaban cronómetros vivos al salir de la sesión o al
+   re-renderizar la lista. Ahora todos los intervalos viven aquí y se pueden
+   detener de golpe. */
+let timersActivos = {};   // "indiceEjercicio_indiceSerie" -> id de setInterval
+
+/** Suma al tiempo transcurrido los segundos reales pasados desde el último
+ *  cálculo. Usa Date.now() en vez de contar ticks, así el cronómetro no pierde
+ *  tiempo si iOS suspende la app (pantalla bloqueada / segundo plano). */
+function sincronizarSerie(s){
+  if(!s) return 0;
+  if(s.corriendo && s.t0){
+    const delta = Math.floor((Date.now() - s.t0)/1000);
+    if(delta > 0){ s.transcurrido = (s.transcurrido||0) + delta; s.t0 += delta*1000; }
+  }
+  return s.transcurrido || 0;
+}
+
+/** Detiene TODOS los cronómetros y consolida el tiempo transcurrido. */
+function detenerTodosLosTimers(){
+  Object.keys(timersActivos).forEach(k=>{ clearInterval(timersActivos[k]); delete timersActivos[k]; });
+  if(borradorActual && Array.isArray(borradorActual.ejercicios)){
+    borradorActual.ejercicios.forEach(b=>{
+      (b.series||[]).forEach(s=>{ if(s && s.corriendo){ sincronizarSerie(s); s.corriendo=false; s.t0=null; } });
+    });
+  }
+}
+
+/** Segundos -> "mm:ss" */
+function fmtTiempo(seg){
+  seg = Math.max(0, Math.round(seg||0));
+  return String(Math.floor(seg/60)).padStart(2,"0")+":"+String(seg%60).padStart(2,"0");
+}
+
+/** "90", "1:30" o "01:30" -> segundos. Antes solo aceptaba "mm:ss" y "90"
+ *  devolvía 0, por eso el botón ▶ se negaba a arrancar. */
+function parseTiempo(str){
+  str = String(str==null?"":str).trim();
+  if(!str) return 0;
+  if(str.indexOf(":") >= 0){
+    const p = str.split(":");
+    return (parseInt(p[0],10)||0)*60 + (parseInt(p[1],10)||0);
+  }
+  return parseInt(str,10)||0;
+}
+
+/** Repinta los cronómetros al volver del segundo plano (iOS congela los
+ *  intervalos, así que al volver hay que recalcular contra el reloj real). */
+function refrescarTimersVisibles(){
+  $$(".ex-card").forEach(c=>{ (c._pintarTimers||[]).forEach(f=>{ try{ f(); }catch(e){} }); });
+  if(borradorActual && sesionEnCurso>=0) actualizarEstadoGuardar();
+}
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden) refrescarTimersVisibles(); });
 let sesionEnCurso = -1;
 let cambiosSinGuardar = false;
 let modoInd = "peso";   // gráfica individual: peso | reps
@@ -675,7 +742,7 @@ function renderNotas(){
   body.innerHTML=regs.map(r=>`
     <div class="note-card">
       <div class="note-head"><span class="note-ex">${escapar(r.ejercicio)}</span><span class="note-date">${formatearFecha(r.fecha)}</span></div>
-      <div class="note-meta">${fmtPeso(r.peso)} ${r.unidad} · ${r.repeticiones} reps</div>
+      <div class="note-meta">${r.omitido ? "No realizado" : (r.modo==="tiempo" ? ("⏱ "+fmtTiempo(r.tiempo!=null?r.tiempo:(r.series||[]).reduce((a,s)=>a+(s.tiempo||0),0))) : (r.modo==="repeticiones" ? (r.repeticiones+" reps") : (fmtPeso(r.peso)+" "+r.unidad+" · "+r.repeticiones+" reps")))}</div>
       <div class="note-text">${escapar(r.comentario)}</div>
     </div>`).join("");
 }
@@ -713,8 +780,11 @@ function ejercicioCompleto(bi){
   if(modo === "repeticiones"){
     return bi.series.every(s=>parseInt(s.reps)>0);
   } else if(modo === "tiempo"){
-    // <-- CAMBIO 2: validar que cada serie tenga un tiempo mayor que 0 (objetivo o transcurrido)
-    return bi.series.every(s=> (s.tiempo||0) > 0);
+    // [FIX] Antes se validaba s.tiempo, que era el tiempo RESTANTE de la cuenta
+    // regresiva: al terminar la serie valía 0 y el ejercicio volvía a contar como
+    // incompleto, así que nunca se podía guardar. Ahora se valida el tiempo
+    // REALMENTE transcurrido con el cronómetro.
+    return bi.series.every(s=> sincronizarSerie(s) > 0);
   } else {
     // modo normal: peso y reps
     return bi.series.every(s=>parseFloat(s.peso)>0 && parseInt(s.reps)>0);
@@ -744,8 +814,12 @@ function abrirSesion(idx){
       const base = prev ? fmtPeso(prev.peso) : "";
       const modo = ej.modo || "normal";
       // <-- CAMBIO 1/2/3: inicializar series con campos según modo y omitido false
+      // [FIX] En modo tiempo la serie guarda objetivo (opcional) y transcurrido (lo que se registra).
+      const nuevaSerie = ()=> modo==="tiempo"
+        ? { objetivo:0, transcurrido:0, corriendo:false, t0:null }
+        : { peso: modo==="repeticiones" ? "" : base, reps:"", manual:false };
       return { nombre:ej.nombre, unidad, pesoBase:base, comentario:"", modo, omitido:false,
-        series: Array.from({length:ej.series}, ()=>({ peso: modo==="repeticiones" ? "" : base, reps: modo==="tiempo" ? "" : "", tiempo: modo==="tiempo" ? 0 : null, manual:false })) };
+        series: Array.from({length:ej.series}, nuevaSerie) };
     })
   };
   $("#sessionPicker").classList.add("hidden");
@@ -758,6 +832,7 @@ function abrirSesion(idx){
   window.scrollTo(0,0);
 }
 function cerrarSesion(){
+  detenerTodosLosTimers();   // [FIX] antes los cronómetros seguían corriendo tras salir de la sesión
   limpiarBorrador();
   sesionEnCurso=-1; borradorActual=null; cambiosSinGuardar=false;
   $("#sessionLogger").classList.add("hidden");
@@ -793,9 +868,12 @@ function restaurarSesionEnCurso(){
       const modo = ej.modo || "normal";
       const base = old ? (old.pesoBase||"") : "";
       const omitido = old ? !!old.omitido : false;
+      // [FIX] En modo tiempo se recupera el tiempo acumulado y el objetivo, y el
+      // cronómetro se restaura SIEMPRE en pausa (nunca corriendo solo).
       const series=Array.from({length:ej.series},(_,k)=>{ 
         const os=old&&old.series&&old.series[k];
-        return {peso: os?os.peso:base, reps: os?os.reps:"", tiempo: os && os.tiempo!=null ? os.tiempo : (modo==="tiempo"?0:null), manual: os?!!os.manual:false};
+        if(modo==="tiempo") return { objetivo: os?(os.objetivo||0):0, transcurrido: os?(os.transcurrido||0):0, corriendo:false, t0:null };
+        return {peso: os?os.peso:base, reps: os?os.reps:"", manual: os?!!os.manual:false};
       });
       return { nombre:ej.nombre, unidad, pesoBase:base, comentario: old?(old.comentario||""):"", series, modo, omitido };
     })
@@ -811,6 +889,7 @@ function restaurarSesionEnCurso(){
 }
 
 function renderLogger(){
+  detenerTodosLosTimers();   // [FIX] evita intervalos huérfanos al reconstruir las tarjetas
   const sesion=DB.rutina[sesionEnCurso];
   const cont=$("#sessionLogger");
   cont.innerHTML=`
@@ -896,22 +975,25 @@ function crearTarjetaEjercicio(sesionNombre, ej, i){
         </div>
       </div>`;
     } else if(modo === "tiempo"){
-      // <-- CAMBIO 2: temporizador de cuenta regresiva configurable
-      // Mostramos un input para el tiempo objetivo (mm:ss) y botones de control
-      const tiempo = s.tiempo || 0;
-      const mm = String(Math.floor(tiempo/60)).padStart(2,"0");
-      const ss = String(tiempo%60).padStart(2,"0");
+      // <-- CAMBIO 2 / [FIX]: cronómetro por serie.
+      // El objetivo (mm:ss) es OPCIONAL: si lo pones, el reloj cuenta hacia atrás
+      // y avisa al llegar a cero; si lo dejas vacío, funciona como cronómetro
+      // normal contando hacia arriba. En ambos casos lo que se guarda es el
+      // tiempo transcurrido.
+      const objetivo = s.objetivo || 0;
+      const transcurrido = s.transcurrido || 0;
+      const mostrar = objetivo>0 ? Math.max(0, objetivo-transcurrido) : transcurrido;
       filas+=`
-      <div class="serie-row" data-tiempo-serie="${si}">
+      <div class="serie-row timer-row" data-tiempo-serie="${si}">
         <div class="serie-lbl">Serie ${si+1}</div>
-        <div class="timer-container">
-          <input class="timer-input" type="text" placeholder="mm:ss" data-timer-input="${si}" value="${mm}:${ss}">
-          <div class="timer-display" data-timer-display="${si}">${mm}:${ss}</div>
-          <div class="timer-btns">
-            <button class="timer-btn" data-timer-toggle="${si}" title="Iniciar/Pausar">▶</button>
-            <button class="timer-btn" data-timer-reset="${si}" title="Reiniciar">↺</button>
-          </div>
+        <div class="timer-display" data-timer-display="${si}">${fmtTiempo(mostrar)}</div>
+        <div class="timer-btns">
+          <button type="button" class="timer-btn" data-timer-toggle="${si}" title="Iniciar/Pausar">▶</button>
+          <button type="button" class="timer-btn ghost" data-timer-reset="${si}" title="Reiniciar a cero">↺</button>
         </div>
+        <label class="timer-obj">Objetivo (opcional)
+          <input class="timer-input" type="text" inputmode="numeric" placeholder="mm:ss o segundos" data-timer-input="${si}" value="${objetivo>0?fmtTiempo(objetivo):""}">
+        </label>
       </div>`;
     } else {
       // Modo normal: peso y reps
@@ -1011,98 +1093,74 @@ function crearTarjetaEjercicio(sesionNombre, ej, i){
     });
   });
 
-  // Temporizadores de cuenta regresiva (solo modo tiempo)
+  // [FIX] Cronómetro por serie — reescrito por completo.
+  // Problemas del código anterior: parseTiempo("90") devolvía 0, el input usaba
+  // "change" (no se aplicaba si tocabas ▶ con el teclado abierto), el conteo se
+  // hacía restando 1 por tick (se desfasa en segundo plano), el intervalo se
+  // guardaba dentro de la serie y nunca se limpiaba, y al terminar dejaba el
+  // tiempo en 0, que es justo lo que se validaba y se guardaba.
   if(modo === "tiempo"){
-    // Convertir mm:ss a segundos
-    function parseTiempo(str){
-      const parts = str.split(":").map(Number);
-      if(parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])){
-        return (parts[0]*60 + parts[1]);
-      }
-      return 0;
-    }
-    // Formatear segundos a mm:ss
-    function fmtTiempo(seg){
-      const mm = String(Math.floor(seg/60)).padStart(2,"0");
-      const ss = String(seg%60).padStart(2,"0");
-      return `${mm}:${ss}`;
-    }
+    card._pintarTimers = [];
+    b.series.forEach((s,si)=>{
+      const key   = i+"_"+si;
+      const disp  = card.querySelector(`[data-timer-display="${si}"]`);
+      const bTog  = card.querySelector(`[data-timer-toggle="${si}"]`);
+      const bRes  = card.querySelector(`[data-timer-reset="${si}"]`);
+      const inObj = card.querySelector(`[data-timer-input="${si}"]`);
 
-    card.querySelectorAll(".timer-input").forEach(inp=>{
-      const si = +inp.dataset.timerInput;
-      inp.addEventListener("change",()=>{
-        let val = inp.value.trim();
-        // Aceptar formatos como "90", "1:30", "01:30"
-        let segundos = parseTiempo(val);
-        if(segundos > 0){
-          b.series[si].tiempo = segundos;
-          b.series[si].tiempoInicial = segundos;
-          // Actualizar display
-          const display = card.querySelector(`[data-timer-display="${si}"]`);
-          if(display) display.textContent = fmtTiempo(segundos);
-          actualizarTarjeta(card,i); actualizarEstadoGuardar(); marcarCambio();
+      // Pinta el reloj: cuenta atrás si hay objetivo, cronómetro normal si no.
+      const pintar = ()=>{
+        const t   = sincronizarSerie(s);
+        const obj = s.objetivo || 0;
+        if(disp){
+          disp.textContent = fmtTiempo(obj>0 ? Math.max(0, obj-t) : t);
+          disp.classList.toggle("finished", obj>0 && t>=obj);
         }
-      });
-    });
+        if(bTog) bTog.textContent = s.corriendo ? "⏸" : "▶";
+      };
 
-    card.querySelectorAll("[data-timer-toggle]").forEach(btn=>{
-      const si = +btn.dataset.timerToggle;
-      btn.addEventListener("click",()=>{
-        const serie = b.series[si];
-        if(serie.timerInterval){
-          // Pausar
-          clearInterval(serie.timerInterval);
-          serie.timerInterval = null;
-          btn.textContent = "▶";
-        } else {
-          // Si no hay tiempo restante, usar el tiempo inicial o el del input
-          if(!serie.tiempo || serie.tiempo <= 0){
-            const inp = card.querySelector(`[data-timer-input="${si}"]`);
-            const seg = parseTiempo(inp.value);
-            if(seg > 0){
-              serie.tiempo = seg;
-              serie.tiempoInicial = seg;
-            } else {
-              toast("Configura un tiempo válido (mm:ss)","⚠️");
-              return;
-            }
+      const pausar = (avisarCambio)=>{
+        if(timersActivos[key]){ clearInterval(timersActivos[key]); delete timersActivos[key]; }
+        sincronizarSerie(s); s.corriendo = false; s.t0 = null;
+        pintar(); actualizarTarjeta(card,i); actualizarEstadoGuardar();
+        if(avisarCambio!==false) marcarCambio();
+      };
+
+      const iniciar = ()=>{
+        if(s.corriendo) return;
+        s.corriendo = true; s.t0 = Date.now();
+        pintar(); marcarCambio();
+        let ticks = 0;
+        timersActivos[key] = setInterval(()=>{
+          const t = sincronizarSerie(s), obj = s.objetivo || 0;
+          pintar(); actualizarTarjeta(card,i); actualizarEstadoGuardar();
+          // Autoguardado cada 5 s (no en cada tick, para no castigar localStorage)
+          if(++ticks % 20 === 0) guardarBorrador();
+          if(obj>0 && t>=obj){
+            pausar();
+            if(disp){ disp.classList.add("finished"); setTimeout(()=>disp && disp.classList.remove("finished"), 1200); }
+            toast("Serie completada","✅");
           }
-          // Iniciar cuenta regresiva
-          btn.textContent = "⏸";
-          serie.timerInterval = setInterval(()=>{
-            if(serie.tiempo > 0){
-              serie.tiempo--;
-              const display = card.querySelector(`[data-timer-display="${si}"]`);
-              if(display) display.textContent = fmtTiempo(serie.tiempo);
-              actualizarTarjeta(card,i); actualizarEstadoGuardar(); marcarCambio();
-              if(serie.tiempo <= 0){
-                // Finalizado
-                clearInterval(serie.timerInterval);
-                serie.timerInterval = null;
-                btn.textContent = "▶";
-                display.classList.add("finished");
-                setTimeout(()=> display.classList.remove("finished"), 800);
-                toast("Serie completada", "✅");
-              }
-            }
-          }, 1000);
-        }
-      });
-    });
+        }, 250);
+      };
 
-    card.querySelectorAll("[data-timer-reset]").forEach(btn=>{
-      const si = +btn.dataset.timerReset;
-      btn.addEventListener("click",()=>{
-        const serie = b.series[si];
-        if(serie.timerInterval) clearInterval(serie.timerInterval);
-        serie.timerInterval = null;
-        serie.tiempo = serie.tiempoInicial || 0;
-        const display = card.querySelector(`[data-timer-display="${si}"]`);
-        if(display) display.textContent = fmtTiempo(serie.tiempo);
-        const toggle = card.querySelector(`[data-timer-toggle="${si}"]`);
-        if(toggle) toggle.textContent = "▶";
-        actualizarTarjeta(card,i); actualizarEstadoGuardar(); marcarCambio();
+      if(bTog) bTog.addEventListener("click", ()=>{ s.corriendo ? pausar() : iniciar(); });
+
+      // ↺ pone el cronómetro a cero (el objetivo se conserva)
+      if(bRes) bRes.addEventListener("click", ()=>{
+        pausar(false);
+        s.transcurrido = 0;
+        pintar(); actualizarTarjeta(card,i); actualizarEstadoGuardar(); marcarCambio();
       });
+
+      // El objetivo se aplica mientras escribes ("input", no "change")
+      if(inObj) inObj.addEventListener("input", ()=>{
+        s.objetivo = parseTiempo(inObj.value);
+        pintar(); actualizarTarjeta(card,i); actualizarEstadoGuardar(); marcarCambio();
+      });
+
+      card._pintarTimers.push(pintar);
+      pintar();
     });
   }
 
@@ -1113,13 +1171,15 @@ function crearTarjetaEjercicio(sesionNombre, ej, i){
     card.querySelectorAll('input[data-sfield], input[data-basefield], button[data-clear-w], button[data-timer-toggle], button[data-timer-reset], .timer-input').forEach(el=>el.disabled = b.omitido);
     card.querySelectorAll('.serie-row').forEach(el=>el.style.opacity = b.omitido?'0.5':'1');
     if(b.omitido){
-      // Detener temporizadores
-      b.series.forEach(s=>{
-        if(s.timerInterval) clearInterval(s.timerInterval);
-        s.timerInterval = null;
+      // [FIX] Detener los cronómetros de este ejercicio usando el registro global
+      b.series.forEach((s,si)=>{
+        const key=i+"_"+si;
+        if(timersActivos[key]){ clearInterval(timersActivos[key]); delete timersActivos[key]; }
+        sincronizarSerie(s); s.corriendo=false; s.t0=null;
       });
       card.querySelectorAll("[data-timer-toggle]").forEach(btn=>btn.textContent = "▶");
     }
+    (card._pintarTimers||[]).forEach(f=>f());
     actualizarTarjeta(card,i); actualizarEstadoGuardar(); marcarCambio();
   });
 
@@ -1185,6 +1245,7 @@ function marcarCambio(){ cambiosSinGuardar=true; guardarBorrador(); }
 
 document.addEventListener("click",(e)=>{ if(e.target.id==="saveBtn" && !e.target.disabled) guardarSesion(); });
 function guardarSesion(){
+  detenerTodosLosTimers();   // [FIX] congela los cronómetros antes de leer los tiempos finales
   const sesion=DB.rutina[sesionEnCurso];
   const fecha=borradorActual.fecha || hoyISO();
   const guardadoId = Date.now()+"_"+Math.random().toString(36).slice(2,8);
@@ -1192,8 +1253,9 @@ function guardarSesion(){
   borradorActual.ejercicios.forEach(b=>{
     const seriesDet = b.series.map(s=>{
       if(b.modo === "tiempo"){
-        // <-- CAMBIO 2: guardar tiempo en segundos (el tiempo restante o el objetivo alcanzado)
-        return { peso:0, reps:0, tiempo: s.tiempo || 0 };
+        // [FIX] Se guarda el tiempo REALMENTE transcurrido en segundos (antes se
+        // guardaba el restante de la cuenta atrás, que al terminar valía 0).
+        return { peso:0, reps:0, tiempo: sincronizarSerie(s), objetivo: s.objetivo||0 };
       } else if(b.modo === "repeticiones"){
         // <-- CAMBIO 1: peso=0, reps normales
         return { peso:0, reps:parseInt(s.reps)||0 };
@@ -1204,9 +1266,12 @@ function guardarSesion(){
     });
     const totalReps = b.modo === "tiempo" ? 0 : seriesDet.reduce((a,s)=>a+(s.reps||0),0);
     const pesoRep = b.modo === "normal" ? redondear(Math.max(...seriesDet.map(s=>s.peso||0))) : 0;
+    // [FIX] tiempo total de todas las series, en segundos, disponible en el historial
+    const tiempoTotal = b.modo === "tiempo" ? seriesDet.reduce((a,s)=>a+(s.tiempo||0),0) : 0;
     DB.historial.push({
       fecha, sesion:sesion.nombre, ejercicio:b.nombre,
       peso:pesoRep, unidad:b.unidad, repeticiones:totalReps,
+      tiempo:tiempoTotal,
       series:seriesDet,
       comentario:(b.comentario||"").trim(),
       guardadoId, guardadoHora,
@@ -1513,14 +1578,13 @@ function abrirDetalleDia(iso){
           <div class="de-name">${escapar(r.ejercicio)}<div class="de-reps">Omitido</div></div>
           <div class="de-val" style="color:var(--danger)">—</div></div>`;
       } else if(r.modo === "tiempo"){
-        // <-- CAMBIO 2: mostrar tiempos
-        const tiempos = (r.series||[]).map(s=>{
-          const t = s.tiempo || 0;
-          return `${String(Math.floor(t/60)).padStart(2,"0")}:${String(t%60).padStart(2,"0")}`;
-        }).join(" · ");
+        // <-- CAMBIO 2 / [FIX]: mostrar el tiempo transcurrido por serie y el total
+        const tiempos = (r.series||[]).map(s=>fmtTiempo(s.tiempo||0)).join(" · ");
+        const total = r.tiempo!=null ? r.tiempo : (r.series||[]).reduce((a,s)=>a+(s.tiempo||0),0);
+        const cmt = r.comentario && r.comentario.trim() ? `<div class="de-cmt">💬 ${escapar(r.comentario)}</div>` : "";
         filas+=`<div class="detail-ex">
-          <div class="de-name">${escapar(r.ejercicio)}<div class="de-reps">Tiempos: ${tiempos}</div></div>
-          <div class="de-val">⏱</div></div>`;
+          <div class="de-name">${escapar(r.ejercicio)}<div class="de-reps">Series: ${tiempos}</div>${cmt}</div>
+          <div class="de-val">⏱ ${fmtTiempo(total)}</div></div>`;
       } else {
         const brk = Array.isArray(r.series)&&r.series.length ? r.series.map(s=>s.reps).join(" · ") : r.repeticiones;
         const cmt = r.comentario && r.comentario.trim() ? `<div class="de-cmt">💬 ${escapar(r.comentario)}</div>` : "";
@@ -1593,16 +1657,31 @@ function renderEditorRegistro(){
       } else {
         filas+=`<div class="serie-row">
           <div class="serie-lbl">Serie ${si+1}</div>
-          <div class="serie-field"><input class="num-in" type="text" inputmode="decimal" data-reg-peso="${ei}_${si}" value="${s.peso}" placeholder="—"><span class="uf">${ej.unidad}</span></div>
+          <div class="serie-field"><input class="num-in" type="text" inputmode="decimal" data-reg-peso="${ei}_${si}" value="${s.peso}" placeholder="—"><span class="uf" data-reg-uf="${ei}">${ej.unidad}</span></div>
           <div class="serie-field"><input class="num-in" type="text" inputmode="numeric" data-reg-reps="${ei}_${si}" value="${s.reps}" placeholder="0"><span class="uf">reps</span></div>
         </div>`;
       }
     });
     const omitidoChecked = ej.omitido ? 'checked' : '';
+    // [FIX] Selector de unidad: antes la unidad era texto fijo y no se podía
+    // corregir si te habías equivocado al registrar. Solo aplica a ejercicios
+    // con peso (en "solo reps" y "por tiempo" no hay unidad que cambiar).
+    const filaUnidad = (ej.modo==="normal") ? `
+      <div class="reg-unidad-row">
+        <span>Unidad del peso</span>
+        <span class="reg-unidad-ctrl">
+          <button type="button" class="aplicar-todos" data-reg-unidad-todos="${ei}">Aplicar a todos</button>
+          <span class="unit-toggle" data-reg-unidad="${ei}">
+            <button type="button" data-u="kg" class="${ej.unidad==='kg'?'on':''}">kg</button>
+            <button type="button" data-u="lb" class="${ej.unidad==='lb'?'on':''}">lb</button>
+          </span>
+        </span>
+      </div>` : "";
     html+=`<div class="ex-card">
       <div class="ex-head"><div class="ex-head-txt"><div class="ex-name">${escapar(ej.ejercicio)}</div></div>
         <label class="omitir-check"><input type="checkbox" data-reg-omitir="${ei}" ${omitidoChecked}> Omitido</label>
       </div>
+      ${filaUnidad}
       <div class="series-list">${filas}</div>
       <div class="cmt-wrap"><textarea class="cmt-area" data-reg-cmt="${ei}" placeholder="Notas del ejercicio">${escapar(ej.comentario)}</textarea></div>
     </div>`;
@@ -1626,6 +1705,24 @@ function renderEditorRegistro(){
   });
   $$("#overlay [data-reg-omitir]").forEach(chk=> chk.onchange=()=>{
     editorRegistroTemp.ejercicios[+chk.dataset.regOmitir].omitido = chk.checked;
+  });
+  // [FIX] Cambio de unidad kg/lb: corrige la etiqueta sin tocar los números
+  // registrados (si te equivocaste de unidad, el peso que anotaste es el bueno).
+  $$("#overlay [data-reg-unidad]").forEach(grp=>{
+    const ei = +grp.dataset.regUnidad;
+    grp.querySelectorAll("button").forEach(btn=> btn.onclick=()=>{
+      editorRegistroTemp.ejercicios[ei].unidad = btn.dataset.u;
+      grp.querySelectorAll("button").forEach(x=>x.classList.toggle("on", x.dataset.u===btn.dataset.u));
+      $$(`#overlay [data-reg-uf="${ei}"]`).forEach(el=> el.textContent = btn.dataset.u);
+    });
+  });
+  // [FIX] Aplica la unidad de este ejercicio a todos los del registro (el error
+  // de unidad suele ser de la sesión entera).
+  $$("#overlay [data-reg-unidad-todos]").forEach(btn=> btn.onclick=()=>{
+    const u = editorRegistroTemp.ejercicios[+btn.dataset.regUnidadTodos].unidad;
+    editorRegistroTemp.ejercicios.forEach(e=>{ if(e.modo==="normal") e.unidad=u; });
+    renderEditorRegistro();
+    toast("Unidad aplicada a todo el registro: "+u);
   });
 }
 function confirmarGuardarRegistro(){
@@ -1829,9 +1926,11 @@ function reconciliarBorrador(){
     const modo = ej.modo || "normal";
     const base = old ? old.pesoBase : "";
     const omitido = old ? !!old.omitido : false;
+    // [FIX] misma reconstrucción por modo que en abrirSesion/restaurar
     const series = Array.from({length:ej.series},(_,k)=>{ 
-      const os = old && old.series[k]; 
-      return { peso: os?os.peso:base, reps: os?os.reps:"", tiempo: os && os.tiempo!=null ? os.tiempo : (modo==="tiempo"?0:null), manual: os?!!os.manual:false }; 
+      const os = old && old.series && old.series[k]; 
+      if(modo==="tiempo") return { objetivo: os?(os.objetivo||0):0, transcurrido: os?(os.transcurrido||0):0, corriendo:false, t0:null };
+      return { peso: os?os.peso:base, reps: os?os.reps:"", manual: os?!!os.manual:false }; 
     });
     return { nombre:ej.nombre, unidad, pesoBase:base, comentario: old?(old.comentario||""):"", series, modo, omitido };
   });
