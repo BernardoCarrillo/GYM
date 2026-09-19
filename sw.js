@@ -2,7 +2,7 @@
    GymLog — Service Worker (estrategia cache-first)
    Cachea la app (HTML) y Chart.js para que todo funcione sin conexión.
    ========================================================================= */
-const CACHE = "gymlog-v9";
+const CACHE = "gymlog-v10";
 
 // Recursos base a precachear. Se incluyen variantes del nombre del HTML
 // para cubrir instalaciones como index.html o gym.html.
