@@ -286,33 +286,36 @@ input,textarea{user-select:text;}
 .omitir-check input[type=checkbox]:checked{background:var(--danger);border-color:var(--danger);}
 .omitir-check input[type=checkbox]:checked::after{content:"✓";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:14px;font-weight:700;}
 
-/* Estilos para el temporizador de cuenta regresiva */
-.timer-container{display:flex;align-items:center;gap:8px;margin-top:8px;}
-.timer-display{
-  flex:1;background:var(--card-2);border-radius:12px;padding:12px;text-align:center;
-  font-size:28px;font-weight:800;letter-spacing:-0.5px;font-variant-numeric:tabular-nums;
-  color:var(--text);min-width:0;transition:all .3s;
+/* ====== [UX] CRONÓMETRO — mismo lenguaje visual que el resto de la app ======
+   Antes el reloj era una caja gigante de 28px con fondo propio y el campo de
+   objetivo tenía su propio estilo: desentonaba con las filas de peso/reps.
+   Ahora reutiliza exactamente los mismos componentes (.serie-row, .serie-field,
+   .num-in, .uf) y los botones comparten tamaño y acabado con el resto. */
+.serie-row.timer-row{flex-wrap:wrap;row-gap:9px;}
+
+/* El reloj es un .num-in más (misma caja, borde y tipografía), solo que de
+   lectura y con cifras de ancho fijo para que no "baile" al contar. */
+.num-in.tempo{
+  width:auto;min-width:78px;padding:9px 10px;font-variant-numeric:tabular-nums;
+  display:inline-flex;align-items:center;justify-content:center;cursor:default;
 }
-/* [FIX] Fila del cronómetro: antes se aplastaba en pantallas estrechas porque
-   input + reloj + 2 botones no caben en una sola línea junto a "Serie N". */
-.serie-row.timer-row{flex-wrap:wrap;gap:8px 6px;}
-.timer-row .timer-display{flex:1 1 auto;min-width:86px;padding:6px 8px;font-size:24px;background:transparent;}
-.timer-row .timer-btns{margin-left:auto;}
-.timer-obj{flex:0 0 100%;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;}
-.timer-obj .timer-input{width:104px;}
-.timer-display.finished{background:var(--accent-2);color:var(--bg);animation:popIn .4s;}
-.timer-input{
-  width:80px;background:var(--card-2);border:1.5px solid var(--sep);border-radius:9px;color:var(--text);
-  text-align:center;font-size:16px;font-weight:700;padding:8px 4px;outline:none;transition:border-color .15s;
-}
-.timer-input:focus{border-color:var(--accent);}
-.timer-btns{display:flex;gap:6px;margin-left:auto;}
+.num-in.tempo.corriendo{border-color:var(--accent);color:var(--accent);}
+.num-in.tempo.finished{border-color:var(--accent-2);color:var(--accent-2);animation:popIn .35s;}
+
+/* Controles: mismo alto y radio que .num-in y que el botón de borrar pesos. */
+.timer-btns{display:flex;gap:6px;flex-shrink:0;margin-left:auto;}
 .timer-btn{
-  width:38px;height:38px;border-radius:10px;background:var(--card-2);color:var(--text);
-  display:flex;align-items:center;justify-content:center;font-size:18px;transition:transform .1s, background .2s;
+  width:42px;height:40px;border-radius:9px;background:var(--card-2);
+  border:1.5px solid var(--sep);color:var(--text);display:flex;align-items:center;
+  justify-content:center;font-size:15px;transition:transform .1s, background .2s, border-color .2s, color .2s;
 }
-.timer-btn:active{transform:scale(.9);background:#4a4a4d;}
+.timer-btn:active{transform:scale(.92);background:var(--card);}
+.timer-btn.on{border-color:var(--accent);color:var(--accent);}
 .timer-btn:disabled{opacity:.4;pointer-events:none;}
+
+/* Objetivo opcional: etiqueta con el mismo estilo que las unidades (.uf). */
+.timer-obj-row{flex:0 0 100%;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.timer-obj-row .num-in{width:84px;}
 
 /* Toast + check */
 .toast{position:fixed;left:50%;bottom:calc(var(--tabbar-h) + var(--safe-bottom) + 20px);transform:translateX(-50%) translateY(20px);background:rgba(44,44,46,.96);backdrop-filter:blur(10px);color:var(--text);padding:13px 20px;border-radius:14px;font-size:14.5px;font-weight:600;z-index:200;display:flex;align-items:center;gap:10px;opacity:0;pointer-events:none;transition:.3s;box-shadow:0 10px 30px rgba(0,0,0,.4);max-width:90%;}
@@ -983,17 +986,27 @@ function crearTarjetaEjercicio(sesionNombre, ej, i){
       const objetivo = s.objetivo || 0;
       const transcurrido = s.transcurrido || 0;
       const mostrar = objetivo>0 ? Math.max(0, objetivo-transcurrido) : transcurrido;
+      // [UX] Misma estructura visual que las demás series: etiqueta "Serie N" con
+      // su objetivo, campo con la misma caja y unidad a la derecha, y controles
+      // con el mismo tamaño y acabado que el resto de botones de la tarjeta.
       filas+=`
       <div class="serie-row timer-row" data-tiempo-serie="${si}">
-        <div class="serie-lbl">Serie ${si+1}</div>
-        <div class="timer-display" data-timer-display="${si}">${fmtTiempo(mostrar)}</div>
-        <div class="timer-btns">
-          <button type="button" class="timer-btn" data-timer-toggle="${si}" title="Iniciar/Pausar">▶</button>
-          <button type="button" class="timer-btn ghost" data-timer-reset="${si}" title="Reiniciar a cero">↺</button>
+        <div class="serie-lbl">Serie ${si+1}<span class="obj" data-timer-objlbl="${si}">${objetivo>0?`objetivo ${fmtTiempo(objetivo)}`:""}</span></div>
+        <div class="serie-field">
+          <span class="num-in tempo" data-timer-display="${si}">${fmtTiempo(mostrar)}</span>
+          <span class="uf">min:seg</span>
         </div>
-        <label class="timer-obj">Objetivo (opcional)
-          <input class="timer-input" type="text" inputmode="numeric" placeholder="mm:ss o segundos" data-timer-input="${si}" value="${objetivo>0?fmtTiempo(objetivo):""}">
-        </label>
+        <div class="timer-btns">
+          <button type="button" class="timer-btn" data-timer-toggle="${si}" title="Iniciar / Pausar">▶</button>
+          <button type="button" class="timer-btn" data-timer-reset="${si}" title="Poner a cero">↺</button>
+        </div>
+        <div class="timer-obj-row">
+          <span class="uf">Objetivo (opcional)</span>
+          <span class="serie-field">
+            <input class="num-in ${objetivo>0?'':'empty'}" type="text" inputmode="numeric" placeholder="—" data-timer-input="${si}" value="${objetivo>0?fmtTiempo(objetivo):""}">
+            <span class="uf">min:seg</span>
+          </span>
+        </div>
       </div>`;
     } else {
       // Modo normal: peso y reps
@@ -1051,7 +1064,7 @@ function crearTarjetaEjercicio(sesionNombre, ej, i){
 
   // Si omitido, deshabilitar campos
   if(omitido){
-    card.querySelectorAll('input[data-sfield], input[data-basefield], button[data-clear-w], button[data-timer-toggle], button[data-timer-reset], .timer-input').forEach(el=>el.disabled=true);
+    card.querySelectorAll('input[data-sfield], input[data-basefield], button[data-clear-w], button[data-timer-toggle], button[data-timer-reset], input[data-timer-input]').forEach(el=>el.disabled=true);
     card.querySelectorAll('.serie-row').forEach(el=>el.style.opacity='0.5');
   }
 
@@ -1114,9 +1127,16 @@ function crearTarjetaEjercicio(sesionNombre, ej, i){
         const obj = s.objetivo || 0;
         if(disp){
           disp.textContent = fmtTiempo(obj>0 ? Math.max(0, obj-t) : t);
+          disp.classList.toggle("corriendo", !!s.corriendo);
           disp.classList.toggle("finished", obj>0 && t>=obj);
         }
-        if(bTog) bTog.textContent = s.corriendo ? "⏸" : "▶";
+        if(bTog){
+          bTog.textContent = s.corriendo ? "⏸" : "▶";
+          bTog.classList.toggle("on", !!s.corriendo);   // [UX] mismo resalte que el resto de controles activos
+        }
+        // [UX] el objetivo se muestra junto a "Serie N", igual que en peso/reps
+        const lbl = card.querySelector(`[data-timer-objlbl="${si}"]`);
+        if(lbl) lbl.textContent = obj>0 ? ("objetivo "+fmtTiempo(obj)) : "";
       };
 
       const pausar = (avisarCambio)=>{
@@ -1137,8 +1157,8 @@ function crearTarjetaEjercicio(sesionNombre, ej, i){
           // Autoguardado cada 5 s (no en cada tick, para no castigar localStorage)
           if(++ticks % 20 === 0) guardarBorrador();
           if(obj>0 && t>=obj){
+            // [UX] el estado "objetivo cumplido" lo pinta pintar() y se mantiene
             pausar();
-            if(disp){ disp.classList.add("finished"); setTimeout(()=>disp && disp.classList.remove("finished"), 1200); }
             toast("Serie completada","✅");
           }
         }, 250);
@@ -1156,6 +1176,7 @@ function crearTarjetaEjercicio(sesionNombre, ej, i){
       // El objetivo se aplica mientras escribes ("input", no "change")
       if(inObj) inObj.addEventListener("input", ()=>{
         s.objetivo = parseTiempo(inObj.value);
+        inObj.classList.toggle("empty", inObj.value.trim()===""); // [UX] igual que los demás campos
         pintar(); actualizarTarjeta(card,i); actualizarEstadoGuardar(); marcarCambio();
       });
 
@@ -1168,7 +1189,7 @@ function crearTarjetaEjercicio(sesionNombre, ej, i){
   card.querySelector("[data-omitir]").addEventListener("change",(e)=>{
     b.omitido = e.target.checked;
     // Habilitar/deshabilitar campos
-    card.querySelectorAll('input[data-sfield], input[data-basefield], button[data-clear-w], button[data-timer-toggle], button[data-timer-reset], .timer-input').forEach(el=>el.disabled = b.omitido);
+    card.querySelectorAll('input[data-sfield], input[data-basefield], button[data-clear-w], button[data-timer-toggle], button[data-timer-reset], input[data-timer-input]').forEach(el=>el.disabled = b.omitido);
     card.querySelectorAll('.serie-row').forEach(el=>el.style.opacity = b.omitido?'0.5':'1');
     if(b.omitido){
       // [FIX] Detener los cronómetros de este ejercicio usando el registro global
@@ -1647,11 +1668,13 @@ function renderEditorRegistro(){
     let filas="";
     ej.series.forEach((s,si)=>{
       if(ej.modo === "tiempo"){
-        const mm = String(Math.floor(s.tiempo/60)).padStart(2,"0");
-        const ss = String(s.tiempo%60).padStart(2,"0");
+        // [UX] mismo componente que en la pantalla de entrenamiento
         filas+=`<div class="serie-row">
           <div class="serie-lbl">Serie ${si+1}</div>
-          <div style="margin-left:auto;font-size:20px;font-weight:800;">${mm}:${ss}</div>
+          <div class="serie-field" style="margin-left:auto;">
+            <span class="num-in tempo">${fmtTiempo(s.tiempo||0)}</span>
+            <span class="uf">min:seg</span>
+          </div>
           <input type="hidden" data-reg-tiempo="${ei}_${si}" value="${s.tiempo}">
         </div>`;
       } else {
@@ -1781,8 +1804,6 @@ function abrirAjustes(){
     <button class="list-btn" onclick="exportarDatos()"><span class="lb-ico">📤</span><span class="lb-txt"><b>Exportar datos</b><span>Descarga un archivo JSON con todo</span></span></button>
     <button class="list-btn" onclick="importarDatos()"><span class="lb-ico">📥</span><span class="lb-txt"><b>Importar datos</b><span>Restaura desde un archivo JSON</span></span></button>
     <button class="list-btn" onclick="abrirEditor()"><span class="lb-ico">✏️</span><span class="lb-txt"><b>Editar rutina</b><span>Series, objetivos y superseries</span></span></button>
-    <button class="list-btn" onclick="restablecerRutina()"><span class="lb-ico">🔄</span><span class="lb-txt"><b>Restablecer rutina</b><span>Vuelve a la rutina original</span></span></button>
-    <button class="list-btn danger" onclick="eliminarTodo()"><span class="lb-ico">🗑️</span><span class="lb-txt"><b>Eliminar todos los datos</b><span>Borra historial y rutina</span></span></button>
     <div style="text-align:center;color:var(--text-3);font-size:11.5px;margin-top:16px">GymLog · ${DB.historial.length} registros guardados</div>`);
 }
 function exportarDatos(){
@@ -1804,18 +1825,9 @@ function importarDatos(){
     reader.readAsText(file); };
   inp.click();
 }
-function restablecerRutina(){
-  abrirModal(`<h3>Restablecer rutina</h3><p>Se recuperará la rutina original de 5 sesiones. Tu historial NO se borra.</p>
-    <div class="modal-actions"><button class="btn grey" onclick="cerrarOverlay()">Cancelar</button><button class="btn blue" id="okReset">Restablecer</button></div>`);
-  $("#okReset").onclick=()=>{ DB.rutina=clonar(RUTINA_DEFAULT); DB=normalizarRutina(DB); guardarDB(); cerrarOverlay(); renderSelectorSesiones(); rellenarSelectores(); reconciliarBorrador(); toast("Rutina restablecida"); };
-}
-function eliminarTodo(){
-  abrirModal(`<h3>¿Eliminar todo?</h3><p>Se borrarán <b>todos</b> tus registros y tu rutina personalizada. Esta acción no se puede deshacer.</p>
-    <div class="modal-actions"><button class="btn grey" onclick="cerrarOverlay()">Cancelar</button><button class="btn red" id="okDel">Eliminar todo</button></div>`);
-  $("#okDel").onclick=()=>{ localStorage.removeItem(LS_KEY); DB=cargarDB(); cerrarOverlay();
-    if(!$("#sessionLogger").classList.contains("hidden")) cerrarSesion();
-    renderSelectorSesiones(); rellenarSelectores(); toast("Todos los datos eliminados"); };
-}
+/* [UX] "Restablecer rutina" y "Eliminar todos los datos" se retiraron de
+   Ajustes: eran acciones destructivas e irreversibles a un solo toque. Los
+   datos solo se pueden reemplazar de forma consciente con Importar. */
 
 /* -------------------------------------------------------------------------
    12. EDITOR DE RUTINA (nombres, series, objetivos, superserie, modo)
@@ -1937,7 +1949,7 @@ function reconciliarBorrador(){
   renderLogger(); guardarBorrador();
 }
 
-Object.assign(window,{exportarDatos,importarDatos,restablecerRutina,eliminarTodo,abrirEditor,
+Object.assign(window,{exportarDatos,importarDatos,abrirEditor,
   agregarSesionEditor,borrarSesionEditor,agregarEjercicioEditor,borrarEjercicioEditor,guardarEditor,cambiarSeries,
   agregarPrepEditor,borrarPrepEditor,editarRegistro,eliminarRegistro,confirmarGuardarRegistro});
 
