@@ -38,19 +38,28 @@
   --danger:#e83a86; --blue:#2f9bff;
   --radius:18px; --radius-sm:12px; --tabbar-h:64px;
   --safe-top:env(safe-area-inset-top,0px); --safe-bottom:env(safe-area-inset-bottom,0px);
+  --safe-left:env(safe-area-inset-left,0px); --safe-right:env(safe-area-inset-right,0px);
   font-size:16px;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{margin:0;padding:0;height:100%;}
+/* [FIX iOS] sin auto-ampliar texto, sin zoom por doble toque (sustituye al antiguo
+   bloqueo por JS de touchend) y alto real de pantalla con dvh */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:manipulation;}
+html,body{margin:0;padding:0;}
+body{min-height:100vh;min-height:100dvh;}
 body{
   background:var(--bg);color:var(--text);
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  -webkit-font-smoothing:antialiased;overscroll-behavior-y:none;user-select:none;
+  -webkit-font-smoothing:antialiased;overscroll-behavior-y:none;-webkit-user-select:none;user-select:none;
 }
 button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:none;}
 input{font-family:inherit;}
-input,textarea{user-select:text;}
-#app{max-width:560px;margin:0 auto;min-height:100%;padding-top:var(--safe-top);padding-bottom:calc(var(--tabbar-h) + var(--safe-bottom));}
+input,textarea{-webkit-user-select:text;user-select:text;}
+/* [FIX iOS] input de archivo fijo en el DOM para Importar (no display:none) */
+.file-oculto{position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none;}
+#app{max-width:560px;margin:0 auto;min-height:100vh;min-height:100dvh;padding-top:var(--safe-top);padding-bottom:calc(var(--tabbar-h) + var(--safe-bottom));
+  padding-left:var(--safe-left);padding-right:var(--safe-right);
+  overflow-x:clip; /* [FIX iOS] nada puede ensanchar la página (clip no rompe el header sticky) */}
 
 /* CABECERA */
 .header{
@@ -70,7 +79,7 @@ input,textarea{user-select:text;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
 .tabbar{
   position:fixed;left:0;right:0;bottom:0;z-index:40;height:calc(var(--tabbar-h) + var(--safe-bottom));
-  padding-bottom:var(--safe-bottom);background:rgba(23,24,29,0.9);
+  padding-bottom:var(--safe-bottom);padding-left:var(--safe-left);padding-right:var(--safe-right);background:rgba(23,24,29,0.9);
   backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
   border-top:0.5px solid var(--sep);display:flex;
 }
@@ -87,20 +96,26 @@ input,textarea{user-select:text;}
 .session-btn .s-name{font-size:16.5px;font-weight:700;letter-spacing:-0.2px;}
 .session-btn .s-meta{font-size:12.5px;color:var(--text-2);margin-top:3px;font-weight:500;}
 .session-btn .chev{margin-left:auto;color:var(--text-3);font-size:20px;}
+.session-btn .s-txt{flex:1;min-width:0;overflow-wrap:break-word;}
+.session-btn.last .s-txt{padding-right:44px;} /* que el sello "Última" no tape el nombre */
 .session-btn.last::after{content:"Última";position:absolute;top:10px;right:14px;font-size:10px;font-weight:700;color:var(--accent);background:rgba(108,92,231,.15);padding:2px 7px;border-radius:8px;}
 
 /* PANTALLA DE ENTRENAMIENTO */
 .train-top{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
 .back-btn{display:flex;align-items:center;gap:3px;color:var(--accent);font-size:16px;font-weight:600;padding:6px 2px;}
-.train-title{font-size:20px;font-weight:800;letter-spacing:-0.3px;flex:1;}
-.date-row{display:flex;align-items:center;justify-content:space-between;background:var(--card);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px;}
-.date-row label{font-size:14px;color:var(--text-2);font-weight:600;}
-.date-row input[type=date]{background:var(--card-2);color:var(--text);border:none;border-radius:9px;padding:8px 10px;font-size:15px;font-weight:600;}
+.train-title{font-size:20px;font-weight:800;letter-spacing:-0.3px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.date-row{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px;}
+.date-row label{font-size:14px;color:var(--text-2);font-weight:600;min-width:0;}
+/* [FIX iOS] el <input type=date> nativo de iOS ignora el ancho y desbordaba la fila;
+   además con <16px Safari hace zoom al tocarlo y la pantalla queda ampliada */
+.date-row input[type=date]{background:var(--card-2);color:var(--text);border:none;border-radius:9px;padding:8px 10px;font-size:16px;font-weight:600;
+  -webkit-appearance:none;appearance:none;min-width:0;max-width:60%;flex:0 1 auto;min-height:40px;text-align:center;}
+input[type=date]::-webkit-date-and-time-value{text-align:center;}
 
 .ex-card{background:var(--card);border-radius:var(--radius);padding:15px;margin-bottom:12px;transition:box-shadow .3s;}
 .ex-card.done{box-shadow:inset 0 0 0 1.5px rgba(108,92,231,.55);}
 .ex-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px;}
-.ex-name{font-size:16px;font-weight:700;letter-spacing:-0.2px;line-height:1.25;}
+.ex-name{font-size:16px;font-weight:700;letter-spacing:-0.2px;line-height:1.25;overflow-wrap:break-word;}
 .ex-target{font-size:12px;color:var(--text-3);font-weight:500;margin-top:2px;}
 .ex-check{width:22px;height:22px;border-radius:50%;flex-shrink:0;border:2px solid var(--sep);display:flex;align-items:center;justify-content:center;font-size:13px;color:transparent;transition:.25s;}
 .ex-card.done .ex-check{background:var(--accent);border-color:var(--accent);color:var(--on-accent);}
@@ -141,7 +156,7 @@ input,textarea{user-select:text;}
 .superset .ex-card:last-child{margin-bottom:0;}
 
 /* Botón guardar */
-.save-wrap{position:fixed;left:0;right:0;bottom:calc(var(--tabbar-h) + var(--safe-bottom));z-index:35;max-width:560px;margin:0 auto;padding:12px 16px 14px;background:linear-gradient(to top, var(--bg) 62%, rgba(23,24,29,0));pointer-events:none;}
+.save-wrap{position:fixed;left:0;right:0;bottom:calc(var(--tabbar-h) + var(--safe-bottom));z-index:35;max-width:560px;margin:0 auto;padding:12px calc(16px + var(--safe-right)) 14px calc(16px + var(--safe-left));background:linear-gradient(to top, var(--bg) 62%, rgba(23,24,29,0));pointer-events:none;}
 .save-wrap>*{pointer-events:auto;}
 .save-btn{width:100%;padding:16px;border-radius:16px;font-size:17px;font-weight:800;letter-spacing:-0.2px;background:var(--card-2);color:var(--text-3);transition:.3s;}
 .save-btn.ready{background:var(--accent);color:var(--on-accent);box-shadow:0 8px 24px rgba(108,92,231,.32);animation:pulse 1.8s ease-in-out infinite;}
@@ -155,7 +170,7 @@ input,textarea{user-select:text;}
 .section-title:first-child{margin-top:4px;}
 .panel{background:var(--card);border-radius:var(--radius);padding:14px;margin-bottom:6px;}
 .selrow{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
-.sel{flex:1;min-width:120px;background:var(--card-2);color:var(--text);border:none;border-radius:10px;padding:11px 12px;font-size:14px;font-weight:600;-webkit-appearance:none;appearance:none;
+.sel{flex:1;min-width:120px;background:var(--card-2);color:var(--text);border:none;border-radius:10px;padding:11px 12px;font-size:16px;font-weight:600;-webkit-appearance:none;appearance:none;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2398989f' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:30px;}
 .chart-box{position:relative;height:260px;width:100%;}
 .chart-box canvas{display:block;width:100%;height:100%;}
@@ -225,7 +240,7 @@ input,textarea{user-select:text;}
 /* MODALES / HOJAS */
 .overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center;}
 .overlay.show{display:flex;animation:fadeIn .2s;}
-.sheet{width:100%;max-width:560px;background:var(--bg);border-radius:22px 22px 0 0;padding:8px 18px calc(24px + var(--safe-bottom));max-height:88vh;overflow-y:auto;animation:slideUp .32s cubic-bezier(.2,.9,.3,1);}
+.sheet{width:100%;max-width:560px;background:var(--bg);border-radius:22px 22px 0 0;padding:8px calc(18px + var(--safe-right)) calc(24px + var(--safe-bottom)) calc(18px + var(--safe-left));max-height:88vh;max-height:88dvh;overflow-y:auto;animation:slideUp .32s cubic-bezier(.2,.9,.3,1);}
 @keyframes slideUp{from{transform:translateY(100%);}to{transform:none;}}
 .sheet .grabber{width:38px;height:5px;border-radius:3px;background:var(--sep);margin:6px auto 14px;}
 .sheet h2{font-size:20px;font-weight:800;margin:0 0 4px;letter-spacing:-0.3px;}
@@ -259,10 +274,10 @@ input,textarea{user-select:text;}
 /* Editor de rutina */
 .editor-session{background:var(--card);border-radius:16px;padding:14px;margin-bottom:12px;}
 .editor-session .es-head{display:flex;gap:8px;align-items:center;margin-bottom:10px;}
-.ed-input{flex:1;background:var(--card-2);border:none;border-radius:10px;color:var(--text);padding:10px 12px;font-size:14.5px;font-weight:600;min-width:0;}
+.ed-input{flex:1;background:var(--card-2);border:none;border-radius:10px;color:var(--text);padding:10px 12px;font-size:16px;font-weight:600;min-width:0;}
 .ed-ex-block{background:var(--card-2);border-radius:12px;padding:9px 10px;margin-bottom:9px;}
 .ed-ex{display:flex;gap:8px;align-items:center;}
-.ed-ex .ed-input{background:var(--card);font-size:13.5px;font-weight:600;}
+.ed-ex .ed-input{background:var(--card);font-size:16px;font-weight:600;}
 .ed-config{margin-top:9px;display:flex;flex-direction:column;gap:9px;}
 .ed-sup{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--accent-2);font-weight:700;}
 .ed-sup input{width:18px;height:18px;accent-color:var(--accent-2);}
@@ -278,7 +293,7 @@ input,textarea{user-select:text;}
 
 /* Estilos para el selector de modo (editor) */
 .ed-mode-select{
-  background:var(--card);border:none;border-radius:9px;color:var(--text);font-size:13px;font-weight:600;padding:8px;
+  background:var(--card);border:none;border-radius:9px;color:var(--text);font-size:16px;font-weight:600;padding:8px;
   -webkit-appearance:none;appearance:none;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2398989f' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;
 }
@@ -291,8 +306,6 @@ input,textarea{user-select:text;}
 
 /* ====== [TIMER] Panel único de temporizador por ejercicio ====== */
 .tmr{margin-top:12px;display:flex;flex-direction:column;gap:10px;}
-.tmr-modo{display:flex;margin:0;}
-.tmr-modo button{flex:1;}
 .tmr-obj{display:flex;flex-direction:column;gap:7px;background:var(--card-2);border-radius:12px;padding:10px 11px;}
 .tmr-obj .uf{font-size:11px;font-weight:800;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;}
 .tmr-obj-ctrl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
@@ -364,7 +377,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.6;
 .cmt-btn:active{transform:scale(.9);}
 .cmt-btn.has::after{content:"";position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--accent);border:1.5px solid var(--card);}
 .cmt-wrap{margin-top:12px;}
-.cmt-area{width:100%;min-height:66px;background:var(--card-2);border:none;border-radius:12px;color:var(--text);padding:11px 12px;font-size:14px;font-weight:500;resize:vertical;outline:none;line-height:1.45;}
+.cmt-area{width:100%;min-height:66px;background:var(--card-2);border:none;border-radius:12px;color:var(--text);padding:11px 12px;font-size:16px;font-weight:500;resize:vertical;outline:none;line-height:1.45;}
 .cmt-area:focus{box-shadow:inset 0 0 0 1.5px var(--accent);}
 
 /* Calentamiento y prehab (checklist) */
@@ -392,7 +405,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.6;
 .note-text{font-size:14px;color:var(--text);line-height:1.45;background:var(--card-2);border-radius:11px;padding:10px 12px;}
 
 /* Navegación más visible */
-.back-btn{display:inline-flex;align-items:center;gap:5px;color:var(--accent);font-size:15px;font-weight:700;padding:9px 14px;background:var(--card);border-radius:12px;}
+.back-btn{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;color:var(--accent);font-size:15px;font-weight:700;padding:9px 14px;background:var(--card);border-radius:12px;}
 .back-btn:active{transform:scale(.96);background:var(--card-2);}
 .back-btn .bk-arrow{font-size:21px;line-height:0;font-weight:800;}
 .tabbar .tab .ico{font-size:22px;line-height:1;padding:5px 13px;border-radius:14px;transition:transform .15s, background .18s;}
@@ -402,8 +415,8 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.6;
 .ed-prep{background:var(--card-2);border-radius:12px;padding:10px 10px 4px;margin-bottom:9px;}
 .ed-prep-title{font-size:11px;font-weight:800;color:var(--accent-2);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:9px;}
 .ed-prep-row{display:flex;gap:7px;align-items:center;margin-bottom:8px;}
-.ed-prep-tipo{flex:0 0 auto;background:var(--card);border:none;border-radius:9px;color:var(--text);font-size:12px;font-weight:700;padding:10px 8px;-webkit-appearance:none;appearance:none;}
-.ed-prep-row .ed-input{background:var(--card);font-size:13px;}
+.ed-prep-tipo{flex:0 0 auto;background:var(--card);border:none;border-radius:9px;color:var(--text);font-size:16px;font-weight:700;padding:9px 8px;-webkit-appearance:none;appearance:none;}
+.ed-prep-row .ed-input{background:var(--card);font-size:16px;}
 .add-line.sm{padding:9px;font-size:12.5px;background:var(--card);margin-bottom:6px;}
 
 /* Registros independientes en el detalle del día */
@@ -566,6 +579,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.6;
 
 <div class="overlay" id="overlay"></div>
 <div class="toast" id="toast"><span class="tk">✓</span><span id="toastMsg">Guardado</span></div>
+<input type="file" id="importInput" class="file-oculto" accept=".json,application/json,text/json,text/plain" tabindex="-1" aria-hidden="true">
 <div class="big-check" id="bigCheck"><div class="circle"><svg viewBox="0 0 60 60"><path d="M15 32 L26 43 L46 18"/></svg></div></div>
 
 <script>
@@ -655,6 +669,7 @@ const RUTINA_DEFAULT = [
 const LS_KEY = "gymlog_v1";
 const LS_SESION = "gymlog_sesion_v1";   // autoguardado del entrenamiento en curso
 const KG_TO_LB = 2.20462;
+const MAX_SERIES = 20;   // [FIX] tope de series: un JSON con un número enorme congelaba la app
 
 let DB = cargarDB();
 let borradorActual = null;
@@ -744,15 +759,15 @@ function objetivoDefault(reps){
 
 /** Normaliza la rutina: series numéricas, objetivos por serie, flag sup y modo. */
 function normalizarRutina(d){
-  d.rutina = d.rutina.map(s=>({
-    nombre: s.nombre,
-    prep: (s.prep||[]).map(p=> typeof p==="string" ? {tipo:"Prep",texto:p} : {tipo:p.tipo||"Prep",texto:p.texto||""}),
-    ejercicios: (s.ejercicios||[]).map((e,idx)=>{
+  d.rutina = (Array.isArray(d.rutina)?d.rutina:[]).filter(s=>s && typeof s==="object").map(s=>({
+    nombre: String(s.nombre||"Sesión"),
+    prep: (Array.isArray(s.prep)?s.prep:[]).filter(p=>p!=null).map(p=> typeof p==="string" ? {tipo:"Prep",texto:p} : {tipo:p.tipo||"Prep",texto:p.texto||""}),
+    ejercicios: (Array.isArray(s.ejercicios)?s.ejercicios:[]).filter(e=>e!=null).map((e,idx)=>{
       let ej = (typeof e==="string") ? { nombre:e } : Object.assign({}, e);
-      ej.nombre = ej.nombre || "";
+      ej.nombre = String(ej.nombre || "");
       ej.objetivo = ej.objetivo || "";
       ej.reps = ej.reps || "";
-      ej.series = Math.max(1, parseInt(ej.series) || 3);
+      ej.series = Math.min(MAX_SERIES, Math.max(1, parseInt(ej.series) || 3));
       ej.sup = idx===0 ? false : !!ej.sup;
       ej.modo = ej.modo || "normal";   // <-- CAMBIO 1/2/3: Añadido campo modo
       let obj = Array.isArray(ej.objetivos) ? ej.objetivos.slice() : [];
@@ -767,8 +782,8 @@ function normalizarRutina(d){
 }
 
 function guardarDB(){
-  try{ localStorage.setItem(LS_KEY, JSON.stringify(DB)); }
-  catch(e){ toast("No se pudo guardar","⚠️"); console.error(e); }
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(DB)); return true; }
+  catch(e){ toast("No se pudo guardar","⚠️"); console.error(e); return false; }
 }
 function clonar(o){ return JSON.parse(JSON.stringify(o)); }
 
@@ -848,7 +863,7 @@ function renderSelectorSesiones(){
     const b=document.createElement("button");
     b.className="session-btn"+(i===DB.config.ultimaSesion?" last":"");
     b.innerHTML=`<div class="badge">${i+1}</div>
-      <div><div class="s-name">${escapar(s.nombre)}</div><div class="s-meta">${s.ejercicios.length} ejercicios</div></div>
+      <div class="s-txt"><div class="s-name">${escapar(s.nombre)}</div><div class="s-meta">${s.ejercicios.length} ejercicios</div></div>
       <div class="chev">›</div>`;
     b.addEventListener("click",()=>abrirSesion(i));
     grid.appendChild(b);
@@ -906,8 +921,10 @@ function abrirSesion(idx){
       const modo = ej.modo || "normal";
       // <-- CAMBIO 1/2/3: inicializar series con campos según modo y omitido false
       // [FIX] En modo tiempo la serie guarda objetivo (opcional) y transcurrido (lo que se registra).
+      // [TIMER] la cuenta atrás arranca con la duración usada la última vez
+      const objPrev = (modo==="tiempo" && prev && Array.isArray(prev.series)) ? ((prev.series.find(x=>x && (x.objetivo||0)>0)||{}).objetivo||0) : 0;
       const nuevaSerie = ()=> modo==="tiempo"
-        ? { objetivo:0, transcurrido:0, corriendo:false, t0:null, hecha:false }
+        ? { objetivo:objPrev, transcurrido:0, corriendo:false, t0:null, hecha:false }
         : { peso: modo==="repeticiones" ? "" : base, reps:"", manual:false };
       return { nombre:ej.nombre, unidad, pesoBase:base, comentario:"", modo, omitido:false,
         series: Array.from({length:ej.series}, nuevaSerie) };
@@ -967,7 +984,7 @@ function restaurarSesionEnCurso(){
         return {peso: os?os.peso:base, reps: os?os.reps:"", manual: os?!!os.manual:false};
       });
       return { nombre:ej.nombre, unidad, pesoBase:base, comentario: old?(old.comentario||""):"", series, modo, omitido,
-               timerModo: old?old.timerModo:undefined, serieActual: old?old.serieActual:undefined, objetivoTiempo: old?old.objetivoTiempo:undefined };
+               serieActual: old?old.serieActual:undefined, objetivoTiempo: old?old.objetivoTiempo:undefined };
     })
   };
   $("#sessionPicker").classList.add("hidden");
@@ -1101,7 +1118,7 @@ function crearTarjetaEjercicio(sesionNombre, ej, i){
     <div class="ex-head">
       <div class="ex-head-txt">
         <div class="ex-name">${escapar(ej.nombre)}</div>
-        <div class="ex-target">${escapar(ej.objetivo||"")}${ej.series?` · ${ej.series} series`:""}${modo!=='normal'?` · ${modo==='repeticiones'?'Solo reps':'Por tiempo'}`:''}</div>
+        <div class="ex-target">${escapar(ej.objetivo||"")}${ej.series?` · ${ej.series} series`:""}${modo!=='normal'?` · ${modo==='repeticiones'?'Solo reps':'Cuenta atrás'}`:''}</div>
       </div>
       <div class="ex-actions">
         <button class="cmt-btn ${tieneCmt?'has':''}" data-cmt aria-label="Comentario">💬</button>
@@ -1125,7 +1142,7 @@ function crearTarjetaEjercicio(sesionNombre, ej, i){
       </div>
     </div>
     ` : ''}
-    ${modo==="tiempo" ? panelTemporizadorHTML(b) : `<div class="series-list">${filas}</div>`}
+    ${modo==="tiempo" ? panelTemporizadorHTML(b, i) : `<div class="series-list">${filas}</div>`}
     <div class="cmt-wrap ${tieneCmt?'':'hidden'}">
       <textarea class="cmt-area" data-cmt-area placeholder="Notas del ejercicio: p. ej. 'me dolió el codo', 'subir peso la próxima'">${escapar(b.comentario||"")}</textarea>
     </div>`;
@@ -1213,20 +1230,13 @@ function crearTarjetaEjercicio(sesionNombre, ej, i){
 }
 
 /* =========================================================================
-   [TIMER] TEMPORIZADOR DE EJERCICIOS "POR TIEMPO" — rediseño de usabilidad
-   Antes: un reloj con ▶/↺ y campo de objetivo POR SERIE (9 controles en un
-   ejercicio de 3 series) y un reloj que a veces subía y a veces bajaba sin
-   decirlo. Ahora:
-   - UN reloj por ejercicio que avanza de serie en serie.
-   - El modo se elige explícitamente: "Cronómetro ↑" o "Cuenta atrás ↓".
-   - El botón principal dice siempre lo que va a hacer (Iniciar serie 2,
-     Pausar, Reanudar) y "Terminar serie" registra el tiempo y pasa a la
-     siguiente.
-   - Chips por serie con el tiempo ya registrado; tocar uno permite repetirlo.
-   - Aviso al terminar: pitido, vibración (si el sistema la ofrece), destello.
-   - La pantalla no se apaga mientras corre (Wake Lock, si está disponible).
-   Datos: se mantienen b.series[k] = {objetivo, transcurrido, corriendo, t0,
-   hecha}; lo que se guarda en el historial sigue siendo el tiempo transcurrido.
+   [TIMER] TEMPORIZADOR DE EJERCICIOS "POR TIEMPO" — solo cuenta atrás
+   El cronómetro (modo ↑) se eliminó. Un único reloj por ejercicio baja desde
+   la duración elegida y avanza de serie en serie; al llegar a 0 la serie se
+   registra sola (pitido, vibración si existe y destello). "Terminar ya" guarda
+   lo hecho si se para antes. La pantalla no se apaga mientras corre (Wake Lock).
+   Datos: b.series[k] = {objetivo, transcurrido, corriendo, t0, hecha}; en el
+   historial se guarda el tiempo transcurrido de cada serie.
    ========================================================================= */
 let audioCtx=null, wakeLock=null;
 function prepararAudio(){
@@ -1252,10 +1262,6 @@ async function mantenerPantalla(on){
 }
 function hayTimerCorriendo(){ return Object.keys(timersActivos).length>0; }
 
-function modoTimer(b){
-  if(b.timerModo!=="arriba" && b.timerModo!=="atras") b.timerModo = b.series.some(s=>(s.objetivo||0)>0) ? "atras" : "arriba";
-  return b.timerModo;
-}
 function objetivoTimer(b){
   if(b.objetivoTiempo==null) b.objetivoTiempo = (b.series.find(s=>(s.objetivo||0)>0)||{}).objetivo || 0;
   return b.objetivoTiempo;
@@ -1266,34 +1272,30 @@ function serieActualTimer(b){
   return k;
 }
 
-function panelTemporizadorHTML(b){
-  const n=b.series.length, modo=modoTimer(b), obj=objetivoTimer(b), k=serieActualTimer(b);
+function panelTemporizadorHTML(b, i){
+  const n=b.series.length, obj=objetivoTimer(b), k=serieActualTimer(b), id="tmrObj"+i;
   return `
   <div class="tmr" data-tmr>
-    <div class="tmr-modo mini-toggle" role="group" aria-label="Tipo de temporizador">
-      <button type="button" data-tmr-modo="arriba" class="${modo==='arriba'?'on':''}" aria-pressed="${modo==='arriba'}">Cronómetro ↑</button>
-      <button type="button" data-tmr-modo="atras" class="${modo==='atras'?'on':''}" aria-pressed="${modo==='atras'}">Cuenta atrás ↓</button>
-    </div>
-    <div class="tmr-obj ${modo==='atras'?'':'hidden'}" data-tmr-objrow>
-      <label class="uf" for="tmrObj${b.nombre.length}_${n}">Duración por serie</label>
+    <div class="tmr-obj">
+      <label class="uf" for="${id}">Duración por serie</label>
       <div class="tmr-obj-ctrl">
-        <span class="serie-field"><input id="tmrObj${b.nombre.length}_${n}" class="num-in ${obj>0?'':'empty'}" type="text" inputmode="numeric" placeholder="0:45" data-tmr-obj value="${obj>0?fmtTiempo(obj):""}"><span class="uf">min:seg</span></span>
-        <span class="tmr-presets">${[30,45,60,90].map(v=>`<button type="button" data-tmr-preset="${v}" aria-label="${fmtTiempo(v)}">${v<60?"0:"+v:fmtTiempo(v).replace(/^0/,"")}</button>`).join("")}</span>
+        <span class="serie-field"><input id="${id}" class="num-in ${obj>0?'':'empty'}" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" placeholder="45" data-tmr-obj value="${obj>0?obj:""}"><span class="uf">seg</span></span>
+        <span class="tmr-presets">${[30,45,60,90].map(v=>`<button type="button" data-tmr-preset="${v}" aria-label="${v} segundos">${v<60?"0:"+v:fmtTiempo(v).replace(/^0/,"")}</button>`).join("")}</span>
       </div>
     </div>
     <div class="tmr-face" data-tmr-face>
       <div class="tmr-serie" data-tmr-serie>Serie ${k+1} de ${n}</div>
-      <div class="tmr-reloj" data-tmr-reloj role="timer" aria-atomic="true">00:00</div>
-      <div class="tmr-barra ${modo==='atras'?'':'hidden'}" data-tmr-barrawrap><i data-tmr-barra></i></div>
+      <div class="tmr-reloj" data-tmr-reloj role="timer" aria-atomic="true">${fmtTiempo(obj)}</div>
+      <div class="tmr-barra" data-tmr-barrawrap><i data-tmr-barra></i></div>
       <div class="tmr-estado" data-tmr-estado aria-live="polite"></div>
     </div>
     <div class="tmr-acciones">
-      <button type="button" class="btn green tmr-main" data-tmr-main>▶\uFE0E Iniciar</button>
-      <button type="button" class="btn grey tmr-fin hidden" data-tmr-fin>✓ Terminar serie</button>
+      <button type="button" class="btn green tmr-main" data-tmr-main>▶︎ Iniciar</button>
+      <button type="button" class="btn grey tmr-fin hidden" data-tmr-fin>✓ Terminar ya</button>
     </div>
-    <button type="button" class="tmr-reset hidden" data-tmr-reset>↺ Poner esta serie a cero</button>
+    <button type="button" class="tmr-reset hidden" data-tmr-reset>↺ Reiniciar esta serie</button>
     <div class="tmr-chips" data-tmr-chips role="list" aria-label="Tiempos por serie"></div>
-    <div class="tmr-nota">Se guarda el tiempo que realmente hiciste en cada serie.</div>
+    <div class="tmr-nota">Al llegar a 0 la serie se registra sola. Si terminas antes, se guarda el tiempo que hiciste.</div>
   </div>`;
 }
 
@@ -1301,51 +1303,53 @@ function montarTemporizador(card, b, i){
   const q=(sel)=>card.querySelector(sel);
   const el={ reloj:q("[data-tmr-reloj]"), serie:q("[data-tmr-serie]"), estado:q("[data-tmr-estado]"), barra:q("[data-tmr-barra]"),
              barraWrap:q("[data-tmr-barrawrap]"), main:q("[data-tmr-main]"), fin:q("[data-tmr-fin]"), reset:q("[data-tmr-reset]"),
-             chips:q("[data-tmr-chips]"), objRow:q("[data-tmr-objrow]"), obj:q("[data-tmr-obj]"), face:q("[data-tmr-face]") };
+             chips:q("[data-tmr-chips]"), obj:q("[data-tmr-obj]"), face:q("[data-tmr-face]"),
+             presets:[...card.querySelectorAll("[data-tmr-preset]")] };
   const n=b.series.length;
   const cur=()=>b.series[serieActualTimer(b)];
   const key=()=>i+"_"+serieActualTimer(b);
   let ultimoPitido=null;
 
-  const aplicarObjetivo=()=>{ const obj = modoTimer(b)==="atras" ? objetivoTimer(b) : 0; b.series.forEach(s=>{ if(!s.hecha) s.objetivo=obj; }); };
+  // La duración elegida se aplica a las series que aún no se han registrado
+  const aplicarObjetivo=()=>{ const obj=objetivoTimer(b); b.series.forEach(s=>{ if(!s.hecha) s.objetivo=obj; }); };
 
   function pintar(){
-    const k=serieActualTimer(b), s=cur(), modo=modoTimer(b), obj=objetivoTimer(b);
+    const k=serieActualTimer(b), s=cur(), obj=objetivoTimer(b);
     const t=sincronizarSerie(s), corriendo=!!s.corriendo;
     const todas=b.series.every(x=>x.hecha);
-    el.serie.textContent = todas && !corriendo ? `Ejercicio completo · ${n} de ${n} series` : `Serie ${k+1} de ${n}`;
     const completo = todas && !corriendo && !card._repetirElegida;
     const total = b.series.reduce((a,x)=>a+sincronizarSerie(x),0);
-    // Completo: muestra el total. Serie ya registrada: su tiempo. Si no: baja o sube según el modo.
-    const mostrar = completo ? total : (s.hecha && !corriendo ? t : (modo==="atras" && obj>0 ? Math.max(0, obj-t) : t));
-    el.reloj.textContent = fmtTiempo(mostrar);
+    el.serie.textContent = completo ? `Ejercicio completo · ${n} de ${n} series` : `Serie ${k+1} de ${n}`;
+    // Completo: muestra el total. Serie ya registrada: su tiempo. Si no: lo que falta.
+    el.reloj.textContent = fmtTiempo(completo ? total : (s.hecha && !corriendo ? t : Math.max(0, obj-t)));
     el.reloj.classList.toggle("corriendo", corriendo);
     el.face.classList.toggle("corriendo", corriendo);
-    el.barraWrap.classList.toggle("hidden", modo!=="atras" || completo);
-    el.barra.style.width = (modo==="atras" && obj>0 ? Math.min(100, t/obj*100) : 0)+"%";
-    el.objRow.classList.toggle("hidden", modo!=="atras");
-    // Texto de estado: deja claro si sube o baja y qué se guarda
+    el.barraWrap.classList.toggle("hidden", completo);
+    el.barra.style.width = (obj>0 ? Math.min(100, t/obj*100) : 0)+"%";
     let estado;
     if(b.omitido) estado="Ejercicio marcado como no realizado.";
-    else if(modo==="atras" && !obj) estado="Elige la duración de cada serie para empezar.";
-    else if(corriendo) estado = modo==="atras" ? "Cuenta atrás en marcha · se registra sola al llegar a 0" : "Cronómetro en marcha · pulsa Terminar al acabar la serie";
+    else if(completo) estado=`✓ Total ${fmtTiempo(total)}. Toca una serie si quieres repetirla.`;
+    else if(!obj) estado="Elige la duración de cada serie para empezar.";
+    else if(corriendo) estado="Cuenta atrás en marcha · se registra sola al llegar a 0";
     else if(s.hecha) estado=`Serie ${k+1} registrada: ${fmtTiempo(t)}. Toca Repetir si quieres rehacerla.`;
-    else if(t>0) estado=`En pausa · ${fmtTiempo(t)} acumulados`;
-    else estado = modo==="atras" ? `Cuenta atrás desde ${fmtTiempo(obj)}; al llegar a 0 se registra sola` : "Cuenta hacia arriba desde 00:00";
-    if(todas && !corriendo){ const tot=b.series.reduce((a,x)=>a+sincronizarSerie(x),0); estado=`✓ Total ${fmtTiempo(tot)}. Toca una serie si quieres repetirla.`; }
+    else if(t>0) estado=`En pausa · quedan ${fmtTiempo(Math.max(0,obj-t))}`;
+    else estado=`Cuenta atrás desde ${fmtTiempo(obj)}; al llegar a 0 se registra sola`;
     el.estado.textContent=estado;
     // Botón principal: siempre dice lo que va a pasar
-    let txt, deshab=false;
+    let txt;
     if(corriendo) txt="❚❚ Pausar";
+    else if(completo) txt="✓ Ejercicio completo";
     else if(s.hecha) txt=`↺ Repetir serie ${k+1}`;
-    else if(t>0) txt="▶\uFE0E Reanudar";
-    else txt=`▶\uFE0E Iniciar serie ${k+1}`;
-    if(!corriendo && modo==="atras" && !obj) deshab=true;
-    if(todas && !corriendo && !card._repetirElegida){ txt="✓ Ejercicio completo"; deshab=true; }
-    el.main.textContent=txt; el.main.disabled=deshab||!!b.omitido;
+    else if(t>0) txt="▶︎ Reanudar";
+    else txt=`▶︎ Iniciar serie ${k+1}`;
+    el.main.textContent=txt;
+    el.main.disabled = !!b.omitido || (!corriendo && (completo || !obj));
     el.main.classList.toggle("pausa", corriendo);
     el.fin.classList.toggle("hidden", !(t>0 && !s.hecha));
     el.reset.classList.toggle("hidden", !(t>0 && !corriendo && !s.hecha));
+    // La duración no se puede cambiar con la cuenta atrás en marcha
+    const bloquear = corriendo || !!b.omitido;
+    el.obj.disabled=bloquear; el.presets.forEach(p=>{ p.disabled=bloquear; });
     // Chips por serie
     el.chips.innerHTML=b.series.map((x,j)=>{
       const tx=sincronizarSerie(x), estadoChip = x.hecha ? "hecha" : (tx>0 ? "parcial" : "pendiente");
@@ -1367,11 +1371,11 @@ function montarTemporizador(card, b, i){
   function terminarSerie(automatico){
     const s=cur(); parar();
     const obj=objetivoTimer(b);
-    if(modoTimer(b)==="atras" && obj>0 && s.transcurrido>obj) s.transcurrido=obj;   // en segundo plano pudo pasarse
+    if(obj>0 && s.transcurrido>obj) s.transcurrido=obj;   // en segundo plano pudo pasarse
     if(!(s.transcurrido>0)){ pintar(); return; }
     s.hecha=true;
     const k=serieActualTimer(b), sig=b.series.findIndex(x=>!x.hecha);
-    // aviso: fuerte si fue la cuenta atrás, corto si lo terminó el usuario
+    // aviso: fuerte si llegó a 0, corto si lo terminó el usuario
     pitido(automatico?3:1, automatico?988:880, automatico?0.24:0.14);
     if(navigator.vibrate) navigator.vibrate(automatico?[220,120,220,120,220]:60);
     el.face.classList.remove("flash"); void el.face.offsetWidth; el.face.classList.add("flash");
@@ -1381,6 +1385,7 @@ function montarTemporizador(card, b, i){
     pintar(); actualizarTarjeta(card,i); actualizarEstadoGuardar(); marcarCambio();
   }
   function iniciar(){
+    if(!objetivoTimer(b)){ toast("Elige primero la duración","⚠️"); return; }
     const s=cur();
     if(s.hecha){ s.hecha=false; s.transcurrido=0; }          // "Repetir serie"
     aplicarObjetivo();
@@ -1392,11 +1397,9 @@ function montarTemporizador(card, b, i){
     timersActivos[key()]=setInterval(()=>{
       const t=sincronizarSerie(s), obj=objetivoTimer(b);
       if(++ticks%20===0) guardarBorrador();                   // autoguardado cada 5 s
-      if(modoTimer(b)==="atras" && obj>0){
-        const resta=obj-t;
-        if(resta<=3 && resta>0 && resta!==ultimoPitido){ ultimoPitido=resta; pitido(1,660,0.09); }  // 3-2-1
-        if(t>=obj){ terminarSerie(true); return; }
-      }
+      const resta=obj-t;
+      if(resta<=3 && resta>0 && resta!==ultimoPitido){ ultimoPitido=resta; pitido(1,660,0.09); }  // 3-2-1
+      if(t>=obj){ terminarSerie(true); return; }
       pintar(); actualizarTarjeta(card,i); actualizarEstadoGuardar();
     },250);
     pintar(); marcarCambio();
@@ -1405,16 +1408,11 @@ function montarTemporizador(card, b, i){
   el.main.addEventListener("click",()=>{ cur().corriendo ? (parar(), pintar(), actualizarTarjeta(card,i), actualizarEstadoGuardar(), marcarCambio()) : iniciar(); });
   el.fin.addEventListener("click",()=>terminarSerie(false));
   el.reset.addEventListener("click",()=>{ const s=cur(); parar(); s.transcurrido=0; s.hecha=false; pintar(); actualizarTarjeta(card,i); actualizarEstadoGuardar(); marcarCambio(); });
-  card.querySelectorAll("[data-tmr-modo]").forEach(btn=> btn.addEventListener("click",()=>{
-    if(hayTimerCorriendo() && cur().corriendo){ toast("Pausa el reloj para cambiar de modo","⚠️"); return; }
-    b.timerModo=btn.dataset.tmrModo;
-    card.querySelectorAll("[data-tmr-modo]").forEach(x=>{ x.classList.toggle("on",x===btn); x.setAttribute("aria-pressed", x===btn?"true":"false"); });
-    aplicarObjetivo(); pintar(); marcarCambio();
-  }));
+  // Duración en SEGUNDOS: el teclado numérico de iOS no tiene ":"
   const fijarObjetivo=(seg)=>{ b.objetivoTiempo=Math.max(0,Math.min(3599,seg||0)); aplicarObjetivo(); el.obj.classList.toggle("empty", !b.objetivoTiempo); pintar(); actualizarEstadoGuardar(); marcarCambio(); };
-  el.obj.addEventListener("input",()=>{ const v=el.obj.value.replace(/[^0-9:]/g,""); if(v!==el.obj.value) el.obj.value=v; fijarObjetivo(parseTiempo(v)); });
-  el.obj.addEventListener("blur",()=>{ if(b.objetivoTiempo) el.obj.value=fmtTiempo(b.objetivoTiempo); });
-  card.querySelectorAll("[data-tmr-preset]").forEach(p=> p.addEventListener("click",()=>{ el.obj.value=fmtTiempo(+p.dataset.tmrPreset); fijarObjetivo(+p.dataset.tmrPreset); }));
+  el.obj.addEventListener("input",()=>{ const v=el.obj.value.replace(/[^0-9]/g,"").slice(0,4); if(v!==el.obj.value) el.obj.value=v; fijarObjetivo(parseInt(v,10)||0); });
+  el.obj.addEventListener("blur",()=>{ el.obj.value = b.objetivoTiempo ? String(b.objetivoTiempo) : ""; });
+  el.presets.forEach(p=> p.addEventListener("click",()=>{ el.obj.value=p.dataset.tmrPreset; fijarObjetivo(+p.dataset.tmrPreset); }));
 
   card._pintarTimers=[pintar];
   pintar();
@@ -2094,20 +2092,105 @@ function exportarDatos(){
   a.href=url; a.download=`gymlog_${hoyISO()}.json`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
   toast("Datos exportados");
 }
+/* [FIX iOS] IMPORTAR DATOS
+   Antes se creaba un <input type=file> suelto (fuera del DOM) y se leía con
+   FileReader sin control de errores ni tiempo límite. En Safari/iOS ese input
+   suelto puede perderse antes de que llegue el "change"; un archivo de iCloud que
+   aún no está descargado puede dejar la lectura colgada sin aviso; y un JSON con
+   un número de series enorme bloqueaba el hilo principal en normalizarRutina.
+   Ahora: input fijo en el DOM, lectura con tiempo límite, saneado completo,
+   confirmación antes de reemplazar y guardado atómico (si no cabe, no se toca nada). */
+const MAX_IMPORT_BYTES = 20*1024*1024;
 function importarDatos(){
-  const inp=document.createElement("input"); inp.type="file"; inp.accept="application/json,.json";
-  inp.onchange=()=>{ const file=inp.files[0]; if(!file) return; const reader=new FileReader();
-    reader.onload=()=>{ try{
-      const d=JSON.parse(reader.result);
-      if(!d.rutina || !Array.isArray(d.historial)) throw new Error("Formato no válido");
-      DB.rutina=d.rutina; DB.historial=d.historial; DB.config=Object.assign(DB.config, d.config||{});
-      if(Array.isArray(d.cuerpo)) DB.cuerpo=d.cuerpo;   // [CUERPO] respaldos antiguos sin mediciones no borran las actuales
-      DB=normalizarRutina(DB); guardarDB(); cerrarOverlay();
-      renderSelectorSesiones(); rellenarSelectores(); reconciliarBorrador(); toast("Datos importados");
-    }catch(e){ toast("Archivo no válido","⚠️"); console.error(e); } };
-    reader.readAsText(file); };
-  inp.click();
+  const inp=$("#importInput");
+  inp.value="";      // permite volver a elegir el mismo archivo
+  inp.click();       // debe ejecutarse dentro del toque del usuario (requisito de iOS)
 }
+function leerArchivoTexto(file, ms=15000){
+  const lectura = (typeof file.text==="function") ? file.text() : new Promise((res,rej)=>{
+    const r=new FileReader(); r.onload=()=>res(String(r.result||"")); r.onerror=()=>rej(r.error||new Error("lectura")); r.readAsText(file);
+  });
+  const limite = new Promise((_,rej)=> setTimeout(()=>rej(new Error("tiempo")), ms));
+  return Promise.race([lectura, limite]);
+}
+async function alElegirArchivo(e){
+  const inp=e.target, file=inp.files && inp.files[0];
+  if(!file) return;
+  cerrarOverlay();
+  if(file.size > MAX_IMPORT_BYTES){ inp.value=""; toast("El archivo es demasiado grande","⚠️"); return; }
+  toast("Leyendo archivo…","⏳");
+  let texto;
+  try{ texto = await leerArchivoTexto(file); }
+  catch(err){
+    console.error(err);
+    toast(err && err.message==="tiempo" ? "El archivo no termina de abrir. ¿Está descargado en el iPhone?" : "No se pudo leer el archivo","⚠️");
+    return;
+  }
+  finally{ inp.value=""; }
+  let datos;
+  try{ datos = validarImportacion(JSON.parse(texto.replace(/^﻿/,""))); }
+  catch(err){ console.error(err); toast(err instanceof SyntaxError ? "El archivo no es un JSON válido" : (err.message||"Archivo no válido"),"⚠️"); return; }
+  abrirModal(`<h3>¿Importar datos?</h3><p>Se reemplazarán tu rutina y tu historial actuales (${DB.historial.length} registros) por los del archivo: <b>${datos.rutina.length} sesiones y ${datos.historial.length} registros</b>${datos.cuerpo?` · ${datos.cuerpo.length} mediciones`:""}.${datos.descartados?` Se omitirán ${datos.descartados} entradas dañadas.`:""} Esta acción no se puede deshacer.</p>
+    <div class="modal-actions"><button class="btn grey" onclick="cerrarOverlay()">Cancelar</button><button class="btn green" id="okImport">Importar</button></div>`);
+  $("#okImport").onclick=()=>{ cerrarOverlay(); aplicarImportacion(datos); };
+}
+/** Comprueba y sanea un respaldo. Lanza Error con un mensaje para el usuario. */
+function validarImportacion(d){
+  if(!d || typeof d!=="object" || !Array.isArray(d.rutina) || !Array.isArray(d.historial)) throw new Error("No es un respaldo de GymLog");
+  const fechaOK=f=> typeof f==="string" && /^\d{4}-\d{2}-\d{2}$/.test(f);
+  const num=v=>{ const n=parseFloat(v); return isFinite(n)?n:0; };
+  let descartados=0;
+  const historial=[];
+  d.historial.forEach(r=>{
+    if(!r || typeof r!=="object" || !fechaOK(r.fecha) || typeof r.ejercicio!=="string"){ descartados++; return; }
+    const series=(Array.isArray(r.series)?r.series:[]).filter(s=>s && typeof s==="object").slice(0,MAX_SERIES)
+      .map(s=>Object.assign({}, s, { peso:num(s.peso), reps:parseInt(s.reps)||0, tiempo:Math.max(0,parseInt(s.tiempo)||0) }));
+    historial.push(Object.assign({}, r, {
+      sesion:String(r.sesion||""), peso:num(r.peso), unidad: r.unidad==="lb"?"lb":"kg",
+      repeticiones:parseInt(r.repeticiones)||0, tiempo:Math.max(0,parseInt(r.tiempo)||0), series,
+      comentario: typeof r.comentario==="string" ? r.comentario : "",
+      modo: ["normal","repeticiones","tiempo"].indexOf(r.modo)>=0 ? r.modo : "normal",
+      omitido: !!r.omitido }));
+  });
+  let cuerpo=null;   // null = el respaldo no trae mediciones: se conservan las actuales
+  if(Array.isArray(d.cuerpo)){
+    cuerpo=[];
+    d.cuerpo.forEach(e=>{
+      if(!e || typeof e!=="object" || !fechaOK(e.fecha)){ descartados++; return; }
+      const m={ id: e.id!=null ? String(e.id) : (Date.now()+"_"+Math.random().toString(36).slice(2,7)), fecha:e.fecha,
+        peso:num(e.peso), altura:num(e.altura), cuello:num(e.cuello), cintura:num(e.cintura) };
+      const c=calcularUSNavy(m);
+      if(!c){ descartados++; return; }
+      cuerpo.push(Object.assign(m,c));
+    });
+  }
+  const rutina=normalizarRutina({ rutina:d.rutina }).rutina.filter(s=>s.ejercicios.length);
+  if(!rutina.length) throw new Error("El respaldo no contiene ninguna sesión");
+  const c=(d.config && typeof d.config==="object") ? d.config : {}, config={};
+  ["unidadPreferida","unidadGraficas"].forEach(k=>{ if(c[k]==="kg"||c[k]==="lb") config[k]=c[k]; });
+  const ult=parseInt(c.ultimaSesion); if(ult>=0 && ult<rutina.length) config.ultimaSesion=ult;
+  const alt=parseFloat(c.alturaCm); if(alt>=120 && alt<=230) config.alturaCm=alt;
+  return { rutina, historial, cuerpo, config, descartados };
+}
+function aplicarImportacion(datos){
+  const anterior=DB;
+  DB=Object.assign({}, DB, {
+    rutina:datos.rutina, historial:datos.historial, cuerpo: datos.cuerpo || DB.cuerpo,
+    config:Object.assign({}, DB.config, datos.config)
+  });
+  if(!(DB.config.ultimaSesion>=0 && DB.config.ultimaSesion<DB.rutina.length)) DB.config.ultimaSesion=0;
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(DB)); }
+  catch(err){ DB=anterior; console.error(err); toast("No hay espacio para guardar estos datos; no se cambió nada","⚠️"); return; }
+  cuerpoForm=null;
+  renderSelectorSesiones(); rellenarSelectores(); reconciliarBorrador();
+  const tabActiva=$(".tabbar .tab.active"), tab=tabActiva ? tabActiva.dataset.tab : "train";
+  if(tab==="progress") refrescarProgreso();
+  else if(tab==="calendar") renderCalendario();
+  else if(tab==="notes") renderNotas();
+  else if(tab==="body") renderCuerpo();
+  toast(`Datos importados · ${DB.historial.length} registros`);
+}
+document.getElementById("importInput").addEventListener("change", alElegirArchivo);
 /* [UX] "Restablecer rutina" y "Eliminar todos los datos" se retiraron de
    Ajustes: eran acciones destructivas e irreversibles a un solo toque. Los
    datos solo se pueden reemplazar de forma consciente con Importar. */
@@ -2161,7 +2244,7 @@ function renderEditor(){
             <select class="ed-mode-select" data-ed-modo="${si}_${ei}">
               <option value="normal" ${(e.modo||'normal')==='normal'?'selected':''}>Peso y reps</option>
               <option value="repeticiones" ${e.modo==='repeticiones'?'selected':''}>Solo reps</option>
-              <option value="tiempo" ${e.modo==='tiempo'?'selected':''}>Por tiempo</option>
+              <option value="tiempo" ${e.modo==='tiempo'?'selected':''}>Cuenta atrás (tiempo)</option>
             </select>
           </div>
         </div></div>`;
@@ -2182,7 +2265,7 @@ function renderEditor(){
 }
 function cambiarSeries(si,ei,delta){
   const e=editorTemp[si].ejercicios[ei];
-  const n=Math.max(1,(parseInt(e.series)||1)+delta); e.series=n;
+  const n=Math.min(MAX_SERIES, Math.max(1,(parseInt(e.series)||1)+delta)); e.series=n;
   e.objetivos=e.objetivos||[];
   if(e.objetivos.length<n){ const def=objetivoDefault(e.reps); while(e.objetivos.length<n) e.objetivos.push(def); }
   else e.objetivos.length=n;
@@ -2228,7 +2311,7 @@ function reconciliarBorrador(){
       return { peso: os?os.peso:base, reps: os?os.reps:"", manual: os?!!os.manual:false }; 
     });
     return { nombre:ej.nombre, unidad, pesoBase:base, comentario: old?(old.comentario||""):"", series, modo, omitido,
-             timerModo: old?old.timerModo:undefined, serieActual: old?old.serieActual:undefined, objetivoTiempo: old?old.objetivoTiempo:undefined };
+             serieActual: old?old.serieActual:undefined, objetivoTiempo: old?old.objetivoTiempo:undefined };
   });
   renderLogger(); guardarBorrador();
 }
@@ -2597,8 +2680,8 @@ if("serviceWorker" in navigator){
 function iniciar(){ configurarPWA(); renderSelectorSesiones(); rellenarSelectores(); restaurarSesionEnCurso(); }
 iniciar();
 
-let lastTouch=0;
-document.addEventListener("touchend",(e)=>{ const now=Date.now(); if(now-lastTouch<=300 && e.target.closest("button,.tab,.prep-row,.list-btn")){ e.preventDefault(); } lastTouch=now; },{passive:false});
+/* [FIX iOS] El antiguo bloqueo de doble toque por JS (touchend + preventDefault)
+   cancelaba toques rápidos en iOS; ahora lo hace el CSS touch-action:manipulation. */
 </script>
 </body>
 </html>
