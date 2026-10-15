@@ -1,11 +1,16 @@
 /* =========================================================================
-   GymLog — Service Worker (estrategia cache-first)
-   Cachea la app (HTML) y Chart.js para que todo funcione sin conexión.
+   GymLog — Service Worker
+   - HTML (navegación): RED PRIMERO con tiempo límite y respaldo en caché.
+     Antes era cache-first también para el HTML: una vez instalada, la app
+     servía siempre la versión vieja y las correcciones nunca llegaban al
+     iPhone. Ahora, con conexión, se carga la última versión; sin conexión
+     (o si la red tarda más de 3.5 s) se usa la copia guardada.
+   - Resto (Chart.js, etc.): cache-first, como antes.
+   Sube el número de CACHE cada vez que publiques cambios.
    ========================================================================= */
-const CACHE = "gymlog-v11";
+const CACHE = "gymlog-v12";
 
-// Recursos base a precachear. Se incluyen variantes del nombre del HTML
-// para cubrir instalaciones como index.html o gym.html.
+// Variantes del nombre del HTML para cubrir index.html o gym.html.
 const ASSETS = [
   "./",
   "./index.html",
@@ -13,45 +18,68 @@ const ASSETS = [
   "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"
 ];
 
-// Instalación: precachea lo que esté disponible (sin fallar si alguno no existe).
+// Instalación: precachea lo disponible (sin fallar si alguno no existe).
 self.addEventListener("install", (e) => {
   e.waitUntil(
-    caches.open(CACHE).then((cache) =>
-      Promise.allSettled(ASSETS.map((u) => cache.add(u)))
-    ).then(() => self.skipWaiting())
+    caches.open(CACHE)
+      .then((cache) => Promise.allSettled(ASSETS.map((u) => cache.add(u))))
+      .then(() => self.skipWaiting())
   );
 });
 
-// Activación: limpia caches antiguas.
+// Activación: limpia caches antiguas y toma control de inmediato.
 self.addEventListener("activate", (e) => {
   e.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
-// Fetch: cache-first. Si está en cache se sirve; si no, se va a la red y se guarda.
+function guardarEnCache(req, res) {
+  if (res && res.ok) {
+    const copia = res.clone();
+    caches.open(CACHE).then((c) => c.put(req, copia)).catch(() => {});
+  }
+}
+
+function htmlDesdeCache(req) {
+  return caches.match(req, { ignoreSearch: true })
+    .then((r) => r || caches.match("./index.html"))
+    .then((r) => r || caches.match("./gym.html"))
+    .then((r) => r || caches.match("./"));
+}
+
+// Red primero para el HTML; si tarda o falla, copia en caché.
+function redPrimero(req) {
+  return new Promise((resolve) => {
+    let resuelto = false;
+    const responder = (r) => { if (!resuelto && r) { resuelto = true; resolve(r); } };
+    const temporizador = setTimeout(() => { htmlDesdeCache(req).then(responder); }, 3500);
+    fetch(req)
+      .then((res) => { clearTimeout(temporizador); guardarEnCache(req, res); responder(res); })
+      .catch(() => {
+        clearTimeout(temporizador);
+        htmlDesdeCache(req).then((r) => responder(r || Response.error()));
+      });
+  });
+}
+
 self.addEventListener("fetch", (e) => {
-  if (e.request.method !== "GET") return;
+  const req = e.request;
+  if (req.method !== "GET" || !req.url.startsWith("http")) return;
+
+  if (req.mode === "navigate") {
+    e.respondWith(redPrimero(req));
+    return;
+  }
+
   e.respondWith(
-    caches.match(e.request).then((cached) => {
+    caches.match(req).then((cached) => {
       if (cached) return cached;
-      return fetch(e.request)
-        .then((res) => {
-          if (res && res.status === 200) {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
-          }
-          return res;
-        })
-        .catch(() => {
-          if (e.request.mode === "navigate") {
-            return caches.match("./index.html")
-              .then((r) => r || caches.match("./gym.html"))
-              .then((r) => r || caches.match("./"));
-          }
-        });
+      return fetch(req)
+        .then((res) => { guardarEnCache(req, res); return res; })
+        .catch(() => Response.error());
     })
   );
 });
