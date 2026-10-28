@@ -39,6 +39,10 @@
   --radius:18px; --radius-sm:12px; --tabbar-h:64px;
   --safe-top:env(safe-area-inset-top,0px); --safe-bottom:env(safe-area-inset-bottom,0px);
   --safe-left:env(safe-area-inset-left,0px); --safe-right:env(safe-area-inset-right,0px);
+  /* [RESPONSIVE] --vp-gap: franja que iOS 26 deja sin usar abajo en la app de inicio
+     (la calcula ajustarViewportIOS(); 0 en cualquier otro navegador).
+     --app-max: ancho máximo del contenido; crece en pantallas grandes. */
+  --vp-gap:0px; --app-max:560px; --pad-x:16px;
   font-size:16px;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -46,7 +50,7 @@
    bloqueo por JS de touchend) y alto real de pantalla con dvh */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:manipulation;}
 html,body{margin:0;padding:0;}
-body{min-height:100vh;min-height:100dvh;}
+body{min-height:100vh;min-height:calc(100dvh + var(--vp-gap));}
 body{
   background:var(--bg);color:var(--text);
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -57,33 +61,42 @@ input{font-family:inherit;}
 input,textarea{-webkit-user-select:text;user-select:text;}
 /* [FIX iOS] input de archivo fijo en el DOM para Importar (no display:none) */
 .file-oculto{position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none;}
-#app{max-width:560px;margin:0 auto;min-height:100vh;min-height:100dvh;padding-top:var(--safe-top);padding-bottom:calc(var(--tabbar-h) + var(--safe-bottom));
+#app{max-width:var(--app-max);margin:0 auto;min-height:100vh;min-height:calc(100dvh + var(--vp-gap));padding-top:var(--safe-top);padding-bottom:calc(var(--tabbar-h) + var(--safe-bottom));
   padding-left:var(--safe-left);padding-right:var(--safe-right);
   overflow-x:clip; /* [FIX iOS] nada puede ensanchar la página (clip no rompe el header sticky) */}
 
 /* CABECERA */
 .header{
-  position:sticky;top:0;z-index:30;background:rgba(23,24,29,0.82);
-  backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
-  padding:calc(var(--safe-top) + 10px) 16px 10px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:30;isolation:isolate;
+  /* [FIX iOS] el desenfoque va en una capa aparte (::before): con el filtro en la
+     propia cabecera, Safari rasterizaba el título a baja resolución y se veía borroso */
+  padding:calc(var(--safe-top) + 10px) var(--pad-x) 10px;display:flex;align-items:center;justify-content:space-between;
   border-bottom:0.5px solid var(--sep);margin-top:calc(-1 * var(--safe-top));
 }
-.header h1{font-size:22px;font-weight:800;margin:0;letter-spacing:-0.4px;}
+.header::before{content:"";position:absolute;inset:0;z-index:-1;background:rgba(23,24,29,0.82);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);}
+.header > div{min-width:0;}
+.header h1{font-size:22px;font-weight:800;margin:0;letter-spacing:-0.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .header .sub{font-size:12.5px;color:var(--text-2);font-weight:500;margin-top:1px;}
 .icon-btn{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--card);transition:transform .12s, background .2s;}
 .icon-btn:active{transform:scale(.9);background:var(--card-2);}
 
 /* VISTAS / PESTAÑAS */
-.view{display:none;padding:14px 16px 24px;animation:fadeIn .28s ease;}
+.view{display:none;padding:14px var(--pad-x) 24px;animation:fadeIn .28s ease;}
 .view.active{display:block;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
 .tabbar{
-  position:fixed;left:0;right:0;bottom:0;z-index:40;height:calc(var(--tabbar-h) + var(--safe-bottom));
-  padding-bottom:var(--safe-bottom);padding-left:var(--safe-left);padding-right:var(--safe-right);background:rgba(23,24,29,0.9);
-  backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  /* [FIX iOS 26] bottom negativo = baja hasta el borde real de la pantalla */
+  position:fixed;left:0;right:0;bottom:calc(-1 * var(--vp-gap));z-index:40;height:calc(var(--tabbar-h) + var(--safe-bottom));isolation:isolate;
+  padding-bottom:var(--safe-bottom);
+  /* en tablet las pestañas se alinean con el contenido en vez de estirarse a todo el ancho */
+  padding-left:max(var(--safe-left), calc((100% - var(--app-max)) / 2));
+  padding-right:max(var(--safe-right), calc((100% - var(--app-max)) / 2));
   border-top:0.5px solid var(--sep);display:flex;
 }
-.tabbar .tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--text-3);font-size:10.5px;font-weight:600;transition:color .2s;}
+.tabbar::before{content:"";position:absolute;inset:0;z-index:-1;background:rgba(23,24,29,0.9);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);}
+.tabbar .tab{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--text-3);font-size:10.5px;font-weight:600;transition:color .2s;}
 .tabbar .tab .ico{font-size:23px;line-height:1;transition:transform .15s;}
 .tabbar .tab.active{color:var(--accent);}
 .tabbar .tab:active .ico{transform:scale(.85);}
@@ -156,7 +169,7 @@ input[type=date]::-webkit-date-and-time-value{text-align:center;}
 .superset .ex-card:last-child{margin-bottom:0;}
 
 /* Botón guardar */
-.save-wrap{position:fixed;left:0;right:0;bottom:calc(var(--tabbar-h) + var(--safe-bottom));z-index:35;max-width:560px;margin:0 auto;padding:12px calc(16px + var(--safe-right)) 14px calc(16px + var(--safe-left));background:linear-gradient(to top, var(--bg) 62%, rgba(23,24,29,0));pointer-events:none;}
+.save-wrap{position:fixed;left:0;right:0;bottom:calc(var(--tabbar-h) + var(--safe-bottom) - var(--vp-gap));z-index:35;max-width:var(--app-max);margin:0 auto;padding:12px calc(var(--pad-x) + var(--safe-right)) 14px calc(var(--pad-x) + var(--safe-left));background:linear-gradient(to top, var(--bg) 62%, rgba(23,24,29,0));pointer-events:none;}
 .save-wrap>*{pointer-events:auto;}
 .save-btn{width:100%;padding:16px;border-radius:16px;font-size:17px;font-weight:800;letter-spacing:-0.2px;background:var(--card-2);color:var(--text-3);transition:.3s;}
 .save-btn.ready{background:var(--accent);color:var(--on-accent);box-shadow:0 8px 24px rgba(108,92,231,.32);animation:pulse 1.8s ease-in-out infinite;}
@@ -238,9 +251,9 @@ input[type=date]::-webkit-date-and-time-value{text-align:center;}
 .heat-legend .hl{width:13px;height:13px;border-radius:3px;}
 
 /* MODALES / HOJAS */
-.overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center;}
+.overlay{position:fixed;inset:0;bottom:calc(-1 * var(--vp-gap));z-index:100;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center;}
 .overlay.show{display:flex;animation:fadeIn .2s;}
-.sheet{width:100%;max-width:560px;background:var(--bg);border-radius:22px 22px 0 0;padding:8px calc(18px + var(--safe-right)) calc(24px + var(--safe-bottom)) calc(18px + var(--safe-left));max-height:88vh;max-height:88dvh;overflow-y:auto;animation:slideUp .32s cubic-bezier(.2,.9,.3,1);}
+.sheet{width:100%;max-width:var(--app-max);background:var(--bg);border-radius:22px 22px 0 0;padding:8px calc(18px + var(--safe-right)) calc(24px + var(--safe-bottom)) calc(18px + var(--safe-left));max-height:88vh;max-height:88dvh;overflow-y:auto;animation:slideUp .32s cubic-bezier(.2,.9,.3,1);}
 @keyframes slideUp{from{transform:translateY(100%);}to{transform:none;}}
 .sheet .grabber{width:38px;height:5px;border-radius:3px;background:var(--sep);margin:6px auto 14px;}
 .sheet h2{font-size:20px;font-weight:800;margin:0 0 4px;letter-spacing:-0.3px;}
@@ -276,6 +289,12 @@ input[type=date]::-webkit-date-and-time-value{text-align:center;}
 .editor-session .es-head{display:flex;gap:8px;align-items:center;margin-bottom:10px;}
 .ed-input{flex:1;background:var(--card-2);border:none;border-radius:10px;color:var(--text);padding:10px 12px;font-size:16px;font-weight:600;min-width:0;}
 .ed-ex-block{background:var(--card-2);border-radius:12px;padding:9px 10px;margin-bottom:9px;}
+/* Punto de inserción entre ejercicios */
+.ed-ins{display:flex;align-items:center;justify-content:center;width:100%;min-height:36px;margin:0 0 7px;padding:0 10px;background:transparent;border:1.5px dashed var(--sep);border-radius:10px;color:var(--text-3);font-size:12.5px;font-weight:700;transition:color .15s,border-color .15s,background .15s;}
+.ed-ins:active{color:var(--accent);border-color:var(--accent);background:rgba(108,92,231,.12);}
+@media (hover:hover){ .ed-ins:hover{color:var(--accent);border-color:var(--accent);} }
+.ed-nuevo{animation:edNuevo 1.4s ease-out;}
+@keyframes edNuevo{0%{box-shadow:0 0 0 3px var(--accent-2);}100%{box-shadow:0 0 0 0 rgba(0,224,164,0);}}
 .ed-ex{display:flex;gap:8px;align-items:center;}
 .ed-ex .ed-input{background:var(--card);font-size:16px;font-weight:600;}
 .ed-config{margin-top:9px;display:flex;flex-direction:column;gap:9px;}
@@ -341,10 +360,10 @@ input[type=date]::-webkit-date-and-time-value{text-align:center;}
 .num-in.tempo{width:auto;min-width:78px;padding:9px 10px;font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;justify-content:center;cursor:default;}
 
 /* Toast + check */
-.toast{position:fixed;left:50%;bottom:calc(var(--tabbar-h) + var(--safe-bottom) + 20px);transform:translateX(-50%) translateY(20px);background:rgba(44,44,46,.96);backdrop-filter:blur(10px);color:var(--text);padding:13px 20px;border-radius:14px;font-size:14.5px;font-weight:600;z-index:200;display:flex;align-items:center;gap:10px;opacity:0;pointer-events:none;transition:.3s;box-shadow:0 10px 30px rgba(0,0,0,.4);max-width:90%;}
+.toast{position:fixed;left:50%;bottom:calc(var(--tabbar-h) + var(--safe-bottom) + 20px - var(--vp-gap));transform:translateX(-50%) translateY(20px);background:rgba(44,44,46,.96);backdrop-filter:blur(10px);color:var(--text);padding:13px 20px;border-radius:14px;font-size:14.5px;font-weight:600;z-index:200;display:flex;align-items:center;gap:10px;opacity:0;pointer-events:none;transition:.3s;box-shadow:0 10px 30px rgba(0,0,0,.4);max-width:90%;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .toast .tk{width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
-.big-check{position:fixed;inset:0;z-index:210;display:none;align-items:center;justify-content:center;pointer-events:none;}
+.big-check{position:fixed;inset:0;bottom:calc(-1 * var(--vp-gap));z-index:210;display:none;align-items:center;justify-content:center;pointer-events:none;}
 .big-check.show{display:flex;}
 .big-check .circle{width:110px;height:110px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;animation:popIn .4s cubic-bezier(.2,.9,.3,1);box-shadow:0 0 60px rgba(108,92,231,.5);}
 .big-check svg{width:56px;height:56px;}
@@ -501,6 +520,52 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.6;
 .bf-item-meas{font-size:11.5px;color:var(--text-3);margin-top:2px;}
 .bf-item-actions{display:flex;gap:8px;}
 @media (max-width:360px){ .bf-stats{grid-template-columns:1fr;} .bf-form{grid-template-columns:1fr;} }
+
+/* =========================================================================
+   [RESPONSIVE] Adaptación a distintos tamaños de pantalla
+   ========================================================================= */
+/* Teléfonos pequeños (iPhone SE, mini, Android compactos) */
+@media (max-width:374px){
+  :root{ --pad-x:12px; --tabbar-h:58px; }
+  .header h1{font-size:20px;}
+  .session-btn{padding:14px;gap:11px;}
+  .session-btn .badge{min-width:38px;height:38px;font-size:17px;border-radius:11px;}
+  .session-btn .s-name{font-size:15.5px;}
+  .tabbar .tab{font-size:9.5px;}
+  .tabbar .tab .ico{font-size:20px;padding:4px 9px;}
+  .sheet{padding-left:calc(14px + var(--safe-left));padding-right:calc(14px + var(--safe-right));}
+}
+/* Teléfonos grandes (Pro Max, Plus, Android grandes): un poco más de aire */
+@media (min-width:420px){
+  :root{ --pad-x:18px; }
+  .session-btn{padding:20px;}
+  .session-btn .s-name{font-size:17px;}
+  .session-btn .s-meta{font-size:13.5px;}
+  .tabbar .tab{font-size:11px;}
+}
+/* Tablets en vertical y pantallas medianas */
+@media (min-width:700px){
+  :root{ --app-max:720px; --pad-x:24px; }
+  .header h1{font-size:26px;}
+  .header .sub{font-size:14px;}
+  .session-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;}
+  .session-btn{min-height:96px;}
+  .tabbar .tab{flex-direction:row;gap:8px;font-size:13px;}
+}
+/* Tablets en horizontal y escritorio */
+@media (min-width:1100px){
+  :root{ --app-max:880px; }
+  .session-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+/* Teléfono en horizontal (poca altura): barra y cabecera compactas */
+@media (orientation:landscape) and (max-height:500px){
+  :root{ --tabbar-h:50px; }
+  .header{padding-top:calc(var(--safe-top) + 6px);padding-bottom:6px;}
+  .header .sub{display:none;}
+  .tabbar .tab{flex-direction:row;gap:6px;font-size:11.5px;}
+  .tabbar .tab .ico{font-size:19px;padding:3px 9px;}
+  .sheet{max-height:94dvh;}
+}
 </style>
 </head>
 <body>
@@ -669,7 +734,32 @@ const RUTINA_DEFAULT = [
 const LS_KEY = "gymlog_v1";
 const LS_SESION = "gymlog_sesion_v1";   // autoguardado del entrenamiento en curso
 const KG_TO_LB = 2.20462;
-const MAX_SERIES = 20;   // [FIX] tope de series: un JSON con un número enorme congelaba la app
+const MAX_SERIES = 20;
+
+/* [FIX iOS 26] En la app añadida a la pantalla de inicio, iOS 26 calcula la ventana
+   más corta que la pantalla real (falta justo la altura de la barra de estado), así
+   que todo lo anclado abajo queda flotando y deja una franja vacía. Ninguna unidad CSS
+   fiable lo corrige, así que se mide: hueco = alto real de pantalla − alto de ventana.
+   Solo se aplica en modo app (standalone) y si el hueco es pequeño (≤120 px); con el
+   teclado abierto el hueco es enorme y se ignora. En Android/Safari normal vale 0. */
+function ajustarViewportIOS(){
+  let gap = 0;
+  try{
+    const standalone = window.navigator.standalone === true ||
+      (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+    if(standalone && window.screen){
+      const vertical = window.innerHeight >= window.innerWidth;
+      const altoPantalla = vertical ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
+      const d = Math.round(altoPantalla - window.innerHeight);
+      if(d > 0 && d <= 120) gap = d;
+    }
+  }catch(e){ gap = 0; }
+  document.documentElement.style.setProperty("--vp-gap", gap + "px");
+}
+ajustarViewportIOS();
+window.addEventListener("resize", ajustarViewportIOS);
+window.addEventListener("orientationchange", ()=> setTimeout(ajustarViewportIOS, 350));
+document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) ajustarViewportIOS(); });   // [FIX] tope de series: un JSON con un número enorme congelaba la app
 
 let DB = cargarDB();
 let borradorActual = null;
@@ -2200,7 +2290,7 @@ document.getElementById("importInput").addEventListener("change", alElegirArchiv
    ------------------------------------------------------------------------- */
 let editorTemp=null;
 function abrirEditor(){ editorTemp=clonar(DB.rutina); normalizarRutina({rutina:editorTemp}); renderEditor(); }
-function renderEditor(){
+function renderEditor(foco){
   let html=`<div class="grabber"></div><h2>Editar rutina</h2><p class="sub">Ajusta series, repeticiones objetivo, superseries y tipo de ejercicio</p><div id="editorList">`;
   editorTemp.forEach((s,si)=>{
     html+=`<div class="editor-session">
@@ -2223,6 +2313,7 @@ function renderEditor(){
       <button class="add-line sm" onclick="agregarPrepEditor(${si})">+ Añadir calentamiento/prehab</button>
     </div>`;
     s.ejercicios.forEach((e,ei)=>{
+      html+=`<button type="button" class="ed-ins" onclick="agregarEjercicioEditor(${si},${ei})" aria-label="Insertar ejercicio en la posición ${ei+1}">${ei===0?"+ Insertar al inicio":"+ Insertar aquí"}</button>`;
       html+=`<div class="ed-ex-block">
         <div class="ed-ex">
           <input class="ed-input" value="${escapar(e.nombre)}" data-ed-ej="${si}_${ei}" placeholder="Ejercicio">
@@ -2249,12 +2340,16 @@ function renderEditor(){
           </div>
         </div></div>`;
     });
-    html+=`<button class="add-line" onclick="agregarEjercicioEditor(${si})">+ Añadir ejercicio</button></div>`;
+    html+=`<button class="add-line" onclick="agregarEjercicioEditor(${si})">+ Añadir ejercicio al final</button></div>`;
   });
   html+=`</div>
     <button class="add-line" style="background:var(--card);margin-bottom:14px" onclick="agregarSesionEditor()">+ Añadir sesión</button>
     <div class="modal-actions"><button class="btn grey" onclick="cerrarOverlay()">Cancelar</button><button class="btn green" onclick="guardarEditor()">Guardar rutina</button></div>`;
+  // Conserva la posición de scroll y no repite la animación al redibujar (antes saltaba al inicio)
+  const hojaPrevia=overlay.querySelector(".sheet #editorList") ? overlay.querySelector(".sheet") : null;
+  const scrollPrevio=hojaPrevia ? hojaPrevia.scrollTop : 0;
   abrirSheet(html);
+  if(hojaPrevia){ const hoja=overlay.querySelector(".sheet"); hoja.style.animation="none"; hoja.scrollTop=scrollPrevio; }
   $$("#editorList [data-ed-sesion]").forEach(inp=> inp.oninput=()=>{ editorTemp[+inp.dataset.edSesion].nombre=inp.value; });
   $$("#editorList [data-ed-ej]").forEach(inp=> inp.oninput=()=>{ const [si,ei]=inp.dataset.edEj.split("_").map(Number); editorTemp[si].ejercicios[ei].nombre=inp.value; });
   $$("#editorList [data-ed-sup]").forEach(chk=> chk.onchange=()=>{ const [si,ei]=chk.dataset.edSup.split("_").map(Number); editorTemp[si].ejercicios[ei].sup=chk.checked; });
@@ -2262,6 +2357,14 @@ function renderEditor(){
   $$("#editorList [data-ed-prep-txt]").forEach(inp=> inp.oninput=()=>{ const [si,pi]=inp.dataset.edPrepTxt.split("_").map(Number); editorTemp[si].prep[pi].texto=inp.value; });
   $$("#editorList [data-ed-prep-tipo]").forEach(sel=> sel.onchange=()=>{ const [si,pi]=sel.dataset.edPrepTipo.split("_").map(Number); editorTemp[si].prep[pi].tipo=sel.value; });
   $$("#editorList [data-ed-modo]").forEach(sel=> sel.onchange=()=>{ const [si,ei]=sel.dataset.edModo.split("_").map(Number); editorTemp[si].ejercicios[ei].modo=sel.value; });
+  if(foco){   // ejercicio recién añadido: se muestra, se resalta y queda listo para escribir su nombre
+    const inp=overlay.querySelector(`[data-ed-ej="${foco.si}_${foco.ei}"]`), bloque=inp && inp.closest(".ed-ex-block");
+    if(bloque){
+      bloque.classList.add("ed-nuevo");
+      bloque.scrollIntoView({block:"center"});
+      try{ inp.focus({preventScroll:true}); inp.select(); inp.setSelectionRange(0, inp.value.length); }catch(e){}
+    }
+  }
 }
 function cambiarSeries(si,ei,delta){
   const e=editorTemp[si].ejercicios[ei];
@@ -2273,7 +2376,16 @@ function cambiarSeries(si,ei,delta){
 }
 function agregarSesionEditor(){ editorTemp.push({nombre:`Sesión ${editorTemp.length+1}`, prep:[], ejercicios:[{nombre:"Nuevo ejercicio",objetivo:"",series:3,reps:"",sup:false,modo:"normal",objetivos:["","",""]}]}); renderEditor(); }
 function borrarSesionEditor(si){ editorTemp.splice(si,1); renderEditor(); }
-function agregarEjercicioEditor(si){ editorTemp[si].ejercicios.push({nombre:"Nuevo ejercicio",objetivo:"",series:3,reps:"",sup:false,modo:"normal",objetivos:["","",""]}); renderEditor(); }
+/** Añade un ejercicio a la sesión `si`. Con `pos` lo inserta en esa posición (0 = al inicio);
+    sin `pos` lo añade al final. Si se inserta dentro de una superserie (el ejercicio que queda
+    después estaba "con el anterior"), el nuevo entra al grupo para no romperla. */
+function agregarEjercicioEditor(si,pos){
+  const lista=editorTemp[si].ejercicios;
+  const i = (pos==null || !(pos>=0) || pos>lista.length) ? lista.length : Math.floor(pos);
+  const dentroDeSuperserie = i>0 && i<lista.length && !!lista[i].sup;
+  lista.splice(i,0,{nombre:"Nuevo ejercicio",objetivo:"",series:3,reps:"",sup:dentroDeSuperserie,modo:"normal",objetivos:["","",""]});
+  renderEditor({si, ei:i});
+}
 function borrarEjercicioEditor(si,ei){ editorTemp[si].ejercicios.splice(ei,1); renderEditor(); }
 function agregarPrepEditor(si){ if(!editorTemp[si].prep) editorTemp[si].prep=[]; editorTemp[si].prep.push({tipo:"Calentamiento",texto:""}); renderEditor(); }
 function borrarPrepEditor(si,pi){ editorTemp[si].prep.splice(pi,1); renderEditor(); }
