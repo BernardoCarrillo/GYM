@@ -39,18 +39,15 @@
   --radius:18px; --radius-sm:12px; --tabbar-h:64px;
   --safe-top:env(safe-area-inset-top,0px); --safe-bottom:env(safe-area-inset-bottom,0px);
   --safe-left:env(safe-area-inset-left,0px); --safe-right:env(safe-area-inset-right,0px);
-  /* [RESPONSIVE] --vp-gap: franja que iOS 26 deja sin usar abajo en la app de inicio
-     (la calcula ajustarViewportIOS(); 0 en cualquier otro navegador).
-     --app-max: ancho máximo del contenido; crece en pantallas grandes. */
-  --vp-gap:0px; --app-max:560px; --pad-x:16px;
+  /* [RESPONSIVE] --app-max: ancho máximo del contenido; crece en pantallas grandes. */
+  --app-max:560px; --pad-x:16px;
   font-size:16px;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-/* [FIX iOS] sin auto-ampliar texto, sin zoom por doble toque (sustituye al antiguo
-   bloqueo por JS de touchend) y alto real de pantalla con dvh */
+/* [FIX iOS] sin auto-ampliar texto y sin zoom por doble toque (sustituye al antiguo
+   bloqueo por JS de touchend) */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:manipulation;}
-html,body{margin:0;padding:0;}
-body{min-height:100vh;min-height:calc(100dvh + var(--vp-gap));}
+html,body{margin:0;padding:0;height:100%;}
 body{
   background:var(--bg);color:var(--text);
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -61,17 +58,24 @@ input{font-family:inherit;}
 input,textarea{-webkit-user-select:text;user-select:text;}
 /* [FIX iOS] input de archivo fijo en el DOM para Importar (no display:none) */
 .file-oculto{position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none;}
-#app{max-width:var(--app-max);margin:0 auto;min-height:100vh;min-height:calc(100dvh + var(--vp-gap));padding-top:var(--safe-top);padding-bottom:calc(var(--tabbar-h) + var(--safe-bottom));
-  padding-left:var(--safe-left);padding-right:var(--safe-right);
-  overflow-x:clip; /* [FIX iOS] nada puede ensanchar la página (clip no rompe el header sticky) */}
+/* [LAYOUT] APP SHELL
+   #app es la raíz: ocupa el viewport de layout completo (position:fixed + inset:0,
+   que con viewport-fit=cover es la pantalla entera, también en modo standalone) y es
+   el ÚNICO elemento que aplica las safe areas. Dentro, una columna flex:
+     cabecera (alto natural) · .main (flex:1, único scroll) · tabbar (alto natural).
+   Nada se mide por JS ni se compensa con márgenes negativos. */
+#app{position:fixed;inset:0;display:flex;flex-direction:column;background:var(--bg);
+  padding:var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);}
+.main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;
+  overflow-x:hidden;overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;}
 
 /* CABECERA */
 .header{
-  position:sticky;top:0;z-index:30;isolation:isolate;
+  position:relative;z-index:30;isolation:isolate;flex:none;width:100%;max-width:var(--app-max);margin:0 auto;
   /* [FIX iOS] el desenfoque va en una capa aparte (::before): con el filtro en la
      propia cabecera, Safari rasterizaba el título a baja resolución y se veía borroso */
-  padding:calc(var(--safe-top) + 10px) var(--pad-x) 10px;display:flex;align-items:center;justify-content:space-between;
-  border-bottom:0.5px solid var(--sep);margin-top:calc(-1 * var(--safe-top));
+  padding:10px var(--pad-x);display:flex;align-items:center;justify-content:space-between;
+  border-bottom:0.5px solid var(--sep);
 }
 .header::before{content:"";position:absolute;inset:0;z-index:-1;background:rgba(23,24,29,0.82);
   -webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);}
@@ -82,16 +86,16 @@ input,textarea{-webkit-user-select:text;user-select:text;}
 .icon-btn:active{transform:scale(.9);background:var(--card-2);}
 
 /* VISTAS / PESTAÑAS */
-.view{display:none;padding:14px var(--pad-x) 24px;animation:fadeIn .28s ease;}
+.view{display:none;flex:1 0 auto;width:100%;max-width:var(--app-max);margin:0 auto;padding:14px var(--pad-x) 24px;animation:fadeIn .28s ease;}
 .view.active{display:block;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
 .tabbar{
-  /* [FIX iOS 26] bottom negativo = baja hasta el borde real de la pantalla */
-  position:fixed;left:0;right:0;bottom:calc(-1 * var(--vp-gap));z-index:40;height:calc(var(--tabbar-h) + var(--safe-bottom));isolation:isolate;
-  padding-bottom:var(--safe-bottom);
+  /* [LAYOUT] último hijo de la columna flex: queda pegada abajo sin position:fixed
+     y la safe area inferior ya la reserva #app */
+  position:relative;flex:none;z-index:40;height:var(--tabbar-h);isolation:isolate;
   /* en tablet las pestañas se alinean con el contenido en vez de estirarse a todo el ancho */
-  padding-left:max(var(--safe-left), calc((100% - var(--app-max)) / 2));
-  padding-right:max(var(--safe-right), calc((100% - var(--app-max)) / 2));
+  padding-left:max(0px, calc((100% - var(--app-max)) / 2));
+  padding-right:max(0px, calc((100% - var(--app-max)) / 2));
   border-top:0.5px solid var(--sep);display:flex;
 }
 .tabbar::before{content:"";position:absolute;inset:0;z-index:-1;background:rgba(23,24,29,0.9);
@@ -169,14 +173,15 @@ input[type=date]::-webkit-date-and-time-value{text-align:center;}
 .superset .ex-card:last-child{margin-bottom:0;}
 
 /* Botón guardar */
-.save-wrap{position:fixed;left:0;right:0;bottom:calc(var(--tabbar-h) + var(--safe-bottom) - var(--vp-gap));z-index:35;max-width:var(--app-max);margin:0 auto;padding:12px calc(var(--pad-x) + var(--safe-right)) 14px calc(var(--pad-x) + var(--safe-left));background:linear-gradient(to top, var(--bg) 62%, rgba(23,24,29,0));pointer-events:none;}
+/* [LAYOUT] sticky dentro de .main: flota sobre la lista al hacer scroll y al final
+   ocupa su propio sitio, así que la lista ya no necesita un relleno "mágico" */
+.save-wrap{position:sticky;bottom:0;z-index:35;flex:none;width:100%;max-width:var(--app-max);margin:0 auto;padding:12px var(--pad-x) 14px;background:linear-gradient(to top, var(--bg) 62%, rgba(23,24,29,0));pointer-events:none;}
 .save-wrap>*{pointer-events:auto;}
 .save-btn{width:100%;padding:16px;border-radius:16px;font-size:17px;font-weight:800;letter-spacing:-0.2px;background:var(--card-2);color:var(--text-3);transition:.3s;}
 .save-btn.ready{background:var(--accent);color:var(--on-accent);box-shadow:0 8px 24px rgba(108,92,231,.32);animation:pulse 1.8s ease-in-out infinite;}
 .save-btn.ready:active{transform:scale(.98);}
 @keyframes pulse{0%,100%{box-shadow:0 8px 24px rgba(108,92,231,.30);}50%{box-shadow:0 8px 30px rgba(108,92,231,.55);}}
 .save-progress{font-size:12.5px;color:var(--text-2);text-align:center;margin-top:8px;font-weight:600;}
-#exList{padding-bottom:120px;}
 
 /* PROGRESO / GRÁFICAS */
 .section-title{font-size:15px;font-weight:800;letter-spacing:-0.2px;margin:20px 2px 10px;}
@@ -251,9 +256,9 @@ input[type=date]::-webkit-date-and-time-value{text-align:center;}
 .heat-legend .hl{width:13px;height:13px;border-radius:3px;}
 
 /* MODALES / HOJAS */
-.overlay{position:fixed;inset:0;bottom:calc(-1 * var(--vp-gap));z-index:100;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center;}
+.overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center;}
 .overlay.show{display:flex;animation:fadeIn .2s;}
-.sheet{width:100%;max-width:var(--app-max);background:var(--bg);border-radius:22px 22px 0 0;padding:8px calc(18px + var(--safe-right)) calc(24px + var(--safe-bottom)) calc(18px + var(--safe-left));max-height:88vh;max-height:88dvh;overflow-y:auto;animation:slideUp .32s cubic-bezier(.2,.9,.3,1);}
+.sheet{width:100%;max-width:var(--app-max);background:var(--bg);border-radius:22px 22px 0 0;padding:8px 18px calc(24px + var(--safe-bottom));max-height:88vh;max-height:88dvh;overflow-y:auto;animation:slideUp .32s cubic-bezier(.2,.9,.3,1);}
 @keyframes slideUp{from{transform:translateY(100%);}to{transform:none;}}
 .sheet .grabber{width:38px;height:5px;border-radius:3px;background:var(--sep);margin:6px auto 14px;}
 .sheet h2{font-size:20px;font-weight:800;margin:0 0 4px;letter-spacing:-0.3px;}
@@ -360,10 +365,10 @@ input[type=date]::-webkit-date-and-time-value{text-align:center;}
 .num-in.tempo{width:auto;min-width:78px;padding:9px 10px;font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;justify-content:center;cursor:default;}
 
 /* Toast + check */
-.toast{position:fixed;left:50%;bottom:calc(var(--tabbar-h) + var(--safe-bottom) + 20px - var(--vp-gap));transform:translateX(-50%) translateY(20px);background:rgba(44,44,46,.96);backdrop-filter:blur(10px);color:var(--text);padding:13px 20px;border-radius:14px;font-size:14.5px;font-weight:600;z-index:200;display:flex;align-items:center;gap:10px;opacity:0;pointer-events:none;transition:.3s;box-shadow:0 10px 30px rgba(0,0,0,.4);max-width:90%;}
+.toast{position:fixed;left:50%;bottom:calc(var(--tabbar-h) + var(--safe-bottom) + 20px);transform:translateX(-50%) translateY(20px);background:rgba(44,44,46,.96);backdrop-filter:blur(10px);color:var(--text);padding:13px 20px;border-radius:14px;font-size:14.5px;font-weight:600;z-index:200;display:flex;align-items:center;gap:10px;opacity:0;pointer-events:none;transition:.3s;box-shadow:0 10px 30px rgba(0,0,0,.4);max-width:90%;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .toast .tk{width:24px;height:24px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
-.big-check{position:fixed;inset:0;bottom:calc(-1 * var(--vp-gap));z-index:210;display:none;align-items:center;justify-content:center;pointer-events:none;}
+.big-check{position:fixed;inset:0;z-index:210;display:none;align-items:center;justify-content:center;pointer-events:none;}
 .big-check.show{display:flex;}
 .big-check .circle{width:110px;height:110px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;animation:popIn .4s cubic-bezier(.2,.9,.3,1);box-shadow:0 0 60px rgba(108,92,231,.5);}
 .big-check svg{width:56px;height:56px;}
@@ -533,7 +538,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.6;
   .session-btn .s-name{font-size:15.5px;}
   .tabbar .tab{font-size:9.5px;}
   .tabbar .tab .ico{font-size:20px;padding:4px 9px;}
-  .sheet{padding-left:calc(14px + var(--safe-left));padding-right:calc(14px + var(--safe-right));}
+  .sheet{padding-left:14px;padding-right:14px;}
 }
 /* Teléfonos grandes (Pro Max, Plus, Android grandes): un poco más de aire */
 @media (min-width:420px){
@@ -560,7 +565,7 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.6;
 /* Teléfono en horizontal (poca altura): barra y cabecera compactas */
 @media (orientation:landscape) and (max-height:500px){
   :root{ --tabbar-h:50px; }
-  .header{padding-top:calc(var(--safe-top) + 6px);padding-bottom:6px;}
+  .header{padding-top:6px;padding-bottom:6px;}
   .header .sub{display:none;}
   .tabbar .tab{flex-direction:row;gap:6px;font-size:11.5px;}
   .tabbar .tab .ico{font-size:19px;padding:3px 9px;}
@@ -578,6 +583,9 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.6;
     </div>
     <button class="icon-btn" id="settingsBtn" aria-label="Ajustes">⚙️</button>
   </div>
+
+  <!-- [LAYOUT] Zona de contenido: único contenedor con scroll del app shell -->
+  <main class="main" id="main">
 
   <!-- ENTRENAR -->
   <section class="view active" id="view-train">
@@ -632,6 +640,8 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);opacity:.6;
   <section class="view" id="view-body" aria-labelledby="hTitle">
     <div id="bodyRoot"></div>
   </section>
+
+  </main>
 
   <nav class="tabbar" id="tabbar">
     <button class="tab active" data-tab="train"><span class="ico"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="currentColor" style="transform: rotate(-45deg); display: inline-block; vertical-align: -0.15em;"><rect x="1.5" y="8.5" width="2" height="7" rx="0.75"/><rect x="3.5" y="6" width="2.5" height="12" rx="1"/><rect x="6" y="7.5" width="1.5" height="9" rx="0.75"/><rect x="7.5" y="11" width="9" height="2" rx="0.5"/><rect x="16.5" y="7.5" width="1.5" height="9" rx="0.75"/><rect x="18" y="6" width="2.5" height="12" rx="1"/><rect x="20.5" y="8.5" width="2" height="7" rx="0.75"/></svg></span>Entrenar</button>
@@ -736,30 +746,7 @@ const LS_SESION = "gymlog_sesion_v1";   // autoguardado del entrenamiento en cur
 const KG_TO_LB = 2.20462;
 const MAX_SERIES = 20;
 
-/* [FIX iOS 26] En la app añadida a la pantalla de inicio, iOS 26 calcula la ventana
-   más corta que la pantalla real (falta justo la altura de la barra de estado), así
-   que todo lo anclado abajo queda flotando y deja una franja vacía. Ninguna unidad CSS
-   fiable lo corrige, así que se mide: hueco = alto real de pantalla − alto de ventana.
-   Solo se aplica en modo app (standalone) y si el hueco es pequeño (≤120 px); con el
-   teclado abierto el hueco es enorme y se ignora. En Android/Safari normal vale 0. */
-function ajustarViewportIOS(){
-  let gap = 0;
-  try{
-    const standalone = window.navigator.standalone === true ||
-      (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
-    if(standalone && window.screen){
-      const vertical = window.innerHeight >= window.innerWidth;
-      const altoPantalla = vertical ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
-      const d = Math.round(altoPantalla - window.innerHeight);
-      if(d > 0 && d <= 120) gap = d;
-    }
-  }catch(e){ gap = 0; }
-  document.documentElement.style.setProperty("--vp-gap", gap + "px");
-}
-ajustarViewportIOS();
-window.addEventListener("resize", ajustarViewportIOS);
-window.addEventListener("orientationchange", ()=> setTimeout(ajustarViewportIOS, 350));
-document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) ajustarViewportIOS(); });   // [FIX] tope de series: un JSON con un número enorme congelaba la app
+// [FIX] tope de series: un JSON con un número enorme congelaba la app
 
 let DB = cargarDB();
 let borradorActual = null;
@@ -922,7 +909,7 @@ function _cambiarTab(tab){
   $$(".tabbar .tab").forEach(t=>t.classList.toggle("active", t.dataset.tab===tab));
   $("#hTitle").textContent = TITULOS[tab][0];
   $("#hSub").textContent = TITULOS[tab][1];
-  window.scrollTo(0,0);
+  $("#main").scrollTop=0;
   if(tab==="progress") refrescarProgreso();
   if(tab==="calendar") renderCalendario();
   if(tab==="notes") renderNotas();
@@ -1027,7 +1014,7 @@ function abrirSesion(idx){
   $("#hSub").textContent = "Registra cada serie";
   renderLogger();
   guardarBorrador();
-  window.scrollTo(0,0);
+  $("#main").scrollTop=0;
 }
 function cerrarSesion(){
   detenerTodosLosTimers();   // [FIX] antes los cronómetros seguían corriendo tras salir de la sesión
@@ -1037,7 +1024,7 @@ function cerrarSesion(){
   $("#saveWrap").classList.add("hidden");
   $("#sessionPicker").classList.remove("hidden");
   $("#hTitle").textContent="Entrenar"; $("#hSub").textContent="Elige tu sesión de hoy";
-  renderSelectorSesiones(); window.scrollTo(0,0);
+  renderSelectorSesiones(); $("#main").scrollTop=0;
 }
 
 /* --- Autoguardado del entrenamiento en curso (recupera datos si la app se cierra) --- */
