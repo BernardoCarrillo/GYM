@@ -8,7 +8,7 @@
    - Resto (Chart.js, etc.): cache-first, como antes.
    Sube el número de CACHE cada vez que publiques cambios.
    ========================================================================= */
-const CACHE = "gymlog-v14";
+const CACHE = "gymlog-v15";
 
 // Variantes del nombre del HTML para cubrir index.html o gym.html.
 const ASSETS = [
